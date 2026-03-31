@@ -8,4 +8,6 @@ public class test {
         int v = 1+1;
         assertEquals(v, 2);
     }
+
+    //blah
 }
