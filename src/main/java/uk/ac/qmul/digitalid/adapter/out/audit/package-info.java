@@ -1,0 +1,3 @@
+package uk.ac.qmul.digitalid.adapter.out.audit;
+// ...existing code...
+
