@@ -138,6 +138,7 @@ public class Main {
                 if (id.isEmpty()) return;
 
                 RightToWorkResponse response = portal.verifyRightToWork(id.get());
+                if ("NOT_FOUND".equals(response.getReasonCode())) { out.println("Identity not found."); return; }
                 out.println("Valid now:   " + response.isValidNow());
                 out.println("Reason code: " + response.getReasonCode());
                 out.println("Checked at:  " + response.getCheckedAt());
