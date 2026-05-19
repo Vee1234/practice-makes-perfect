@@ -56,4 +56,25 @@ class AuthorisationServiceTest {
         assertThat(result).isPresent();
         assertThat(result.get().code()).isEqualTo(ErrorCode.UNAUTHORISED_OPERATION);
     }
+
+    // authoriseAuditQuery
+
+    @Test
+    void shouldAuthoriseAuditQuery_whenOrganisationIsAuditor() {
+        Organisation organisation = new Organisation("AUD-001", OrganisationRole.AUDITOR);
+
+        Optional<DomainError> result = authorisationService.authoriseAuditQuery(organisation);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void shouldRejectAuditQuery_whenOrganisationIsEmployer() {
+        Organisation organisation = new Organisation("EMP-001", OrganisationRole.EMPLOYER);
+
+        Optional<DomainError> result = authorisationService.authoriseAuditQuery(organisation);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().code()).isEqualTo(ErrorCode.UNAUTHORISED_OPERATION);
+    }
 }
