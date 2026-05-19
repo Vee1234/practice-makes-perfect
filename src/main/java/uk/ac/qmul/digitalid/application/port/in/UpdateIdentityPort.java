@@ -4,6 +4,6 @@ import uk.ac.qmul.digitalid.application.service.management.IdentityUpdateCommand
 import uk.ac.qmul.digitalid.domain.DigitalId;
 import uk.ac.qmul.digitalid.domain.OperationResult;
 
-public interface UpdateIdentityUseCase {
+public interface UpdateIdentityPort {
     OperationResult<DigitalId> updateMutableAttributes(IdentityUpdateCommand command);
 }

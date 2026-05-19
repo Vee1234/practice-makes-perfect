@@ -3,8 +3,8 @@ package uk.ac.qmul.digitalid.application.service.management;
 import uk.ac.qmul.digitalid.application.audit.AuditEvent;
 import uk.ac.qmul.digitalid.application.audit.AuditEventPublisher;
 import uk.ac.qmul.digitalid.application.auth.AuthorisationService;
-import uk.ac.qmul.digitalid.application.port.in.CreateIdentityUseCase;
-import uk.ac.qmul.digitalid.application.port.in.UpdateIdentityUseCase;
+import uk.ac.qmul.digitalid.application.port.in.CreateIdentityPort;
+import uk.ac.qmul.digitalid.application.port.in.UpdateIdentityPort;
 import uk.ac.qmul.digitalid.application.port.out.DigitalIdRepository;
 import uk.ac.qmul.digitalid.domain.*;
 
@@ -12,7 +12,7 @@ import java.time.Clock;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class DigitalIdManagementService implements CreateIdentityUseCase, UpdateIdentityUseCase {
+public final class DigitalIdManagementService implements CreateIdentityPort, UpdateIdentityPort {
 
     private final DigitalIdRepository repository;
     private final AuditEventPublisher auditPublisher;

@@ -4,6 +4,6 @@ import uk.ac.qmul.digitalid.application.service.management.IdentityCreateCommand
 import uk.ac.qmul.digitalid.domain.DigitalId;
 import uk.ac.qmul.digitalid.domain.OperationResult;
 
-public interface CreateIdentityUseCase {
+public interface CreateIdentityPort {
     OperationResult<DigitalId> createIdentity(IdentityCreateCommand command);
 }
