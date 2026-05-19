@@ -3,9 +3,10 @@ package uk.ac.qmul.digitalid.adapter.in.portal;
 import uk.ac.qmul.digitalid.application.auth.Organisation;
 import uk.ac.qmul.digitalid.application.auth.OrganisationRole;
 import uk.ac.qmul.digitalid.application.port.in.VerifyIdentityPort;
-import uk.ac.qmul.digitalid.application.service.consumption.VerificationDecision;
 import uk.ac.qmul.digitalid.application.service.consumption.VerificationRequest;
+import uk.ac.qmul.digitalid.domain.DigitalId;
 import uk.ac.qmul.digitalid.domain.DigitalIdNumber;
+import uk.ac.qmul.digitalid.domain.OperationResult;
 import uk.ac.qmul.digitalid.domain.RestrictionType;
 
 import java.time.Clock;
@@ -27,9 +28,9 @@ public final class DrivingLicencePortal {
         this.projector  = new DrivingLicenceResponseProjector();
     }
 
-    public DrivingLicenceResponse checkLicenceEligibility(DigitalIdNumber id, LocalDate checkDate) {
-        Objects.requireNonNull(id,        "id is required");
-        Objects.requireNonNull(checkDate, "checkDate is required");
+    public DrivingLicenceResponse checkLicenceEligibility(DigitalIdNumber id) {
+        Objects.requireNonNull(id, "id is required");
+        LocalDate checkDate = LocalDate.now(clock);
 
         CompositeEligibilityPolicy policy = new CompositeEligibilityPolicy(
                 checkDate,
@@ -40,7 +41,7 @@ public final class DrivingLicencePortal {
                 )
         );
 
-        VerificationDecision decision = verifyPort.verify(new VerificationRequest(id, DVLA, policy));
-        return projector.project(decision, policy.getFailingReasonCodes());
+        OperationResult<DigitalId> result = verifyPort.verify(new VerificationRequest(id, DVLA, policy));
+        return projector.project(result, policy.getFailingReasonCodes());
     }
 }

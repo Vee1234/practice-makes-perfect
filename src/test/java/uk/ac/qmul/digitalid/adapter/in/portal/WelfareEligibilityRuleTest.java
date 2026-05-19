@@ -21,48 +21,6 @@ class WelfareEligibilityRuleTest {
     private static final LegalName  NAME       = new LegalName("Jane Doe");
     private static final LocalDate  DOB        = LocalDate.of(1990, 6, 15);
 
-    // --- RegionMatchRule ---
-
-    @Test
-    void regionMatchRule_shouldPass_whenSubmittedRegionMatchesRegistered() {
-        DigitalId identity = baseIdentity().withResidentialRegion("London");
-        EligibilityContext context = new EligibilityContext(identity, CHECK_DATE);
-
-        Optional<String> result = new RegionMatchRule("London").evaluate(context);
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    void regionMatchRule_shouldPass_caseInsensitive() {
-        DigitalId identity = baseIdentity().withResidentialRegion("London");
-        EligibilityContext context = new EligibilityContext(identity, CHECK_DATE);
-
-        Optional<String> result = new RegionMatchRule("london").evaluate(context);
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    void regionMatchRule_shouldFail_withRegionMismatch_whenRegionsDoNotMatch() {
-        DigitalId identity = baseIdentity().withResidentialRegion("Manchester");
-        EligibilityContext context = new EligibilityContext(identity, CHECK_DATE);
-
-        Optional<String> result = new RegionMatchRule("London").evaluate(context);
-
-        assertThat(result).contains("REGION_MISMATCH");
-    }
-
-    @Test
-    void regionMatchRule_shouldFail_withRegionNotSet_whenResidentialRegionIsNull() {
-        DigitalId identity = baseIdentity();
-        EligibilityContext context = new EligibilityContext(identity, CHECK_DATE);
-
-        Optional<String> result = new RegionMatchRule("London").evaluate(context);
-
-        assertThat(result).contains("REGION_NOT_SET");
-    }
-
     // --- WelfareBandEligibilityRule ---
 
     @Test

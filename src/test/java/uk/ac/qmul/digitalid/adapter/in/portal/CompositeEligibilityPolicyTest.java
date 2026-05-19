@@ -1,7 +1,6 @@
 package uk.ac.qmul.digitalid.adapter.in.portal;
 
 import org.junit.jupiter.api.Test;
-import uk.ac.qmul.digitalid.application.service.consumption.VerificationDecision;
 import uk.ac.qmul.digitalid.domain.DigitalId;
 import uk.ac.qmul.digitalid.domain.DigitalIdNumber;
 import uk.ac.qmul.digitalid.domain.IdentityStatus;
@@ -34,9 +33,9 @@ class CompositeEligibilityPolicyTest {
 
     @Test
     void shouldReturnVerified_whenAllRulesPass() {
-        VerificationDecision decision = drivingPolicy.evaluate(activeAdultIdentity());
+        boolean decision = drivingPolicy.evaluate(activeAdultIdentity());
 
-        assertThat(decision).isEqualTo(VerificationDecision.VERIFIED);
+        assertThat(decision).isTrue();
         assertThat(drivingPolicy.getFailingReasonCodes()).isEmpty();
     }
 
@@ -44,9 +43,9 @@ class CompositeEligibilityPolicyTest {
     void shouldReturnRejected_whenIdentityIsSuspended() {
         DigitalId suspended = activeAdultIdentity().changeStatus(IdentityStatus.SUSPENDED, NOW).getPayload();
 
-        VerificationDecision decision = drivingPolicy.evaluate(suspended);
+        boolean decision = drivingPolicy.evaluate(suspended);
 
-        assertThat(decision).isEqualTo(VerificationDecision.REJECTED);
+        assertThat(decision).isFalse();
         assertThat(drivingPolicy.getFailingReasonCodes()).contains("INACTIVE_STATUS");
     }
 
@@ -54,9 +53,9 @@ class CompositeEligibilityPolicyTest {
     void shouldReturnRejected_whenApplicantIsBelowMinimumAge() {
         DigitalId underage = DigitalId.create(ID, NAME, CHECK_DATE.minusYears(15), NOW);
 
-        VerificationDecision decision = drivingPolicy.evaluate(underage);
+        boolean decision = drivingPolicy.evaluate(underage);
 
-        assertThat(decision).isEqualTo(VerificationDecision.REJECTED);
+        assertThat(decision).isFalse();
         assertThat(drivingPolicy.getFailingReasonCodes()).contains("MINIMUM_AGE_NOT_MET");
     }
 
@@ -64,9 +63,9 @@ class CompositeEligibilityPolicyTest {
     void shouldReturnRejected_whenActiveDrivingBanExists() {
         DigitalId banned = identityWithActiveBan();
 
-        VerificationDecision decision = drivingPolicy.evaluate(banned);
+        boolean decision = drivingPolicy.evaluate(banned);
 
-        assertThat(decision).isEqualTo(VerificationDecision.REJECTED);
+        assertThat(decision).isFalse();
         assertThat(drivingPolicy.getFailingReasonCodes()).contains("DRIVING_BAN_ACTIVE");
     }
 
@@ -74,9 +73,9 @@ class CompositeEligibilityPolicyTest {
     void shouldReturnVerified_whenDrivingBanHasExpired() {
         DigitalId expiredBan = identityWithExpiredBan();
 
-        VerificationDecision decision = drivingPolicy.evaluate(expiredBan);
+        boolean decision = drivingPolicy.evaluate(expiredBan);
 
-        assertThat(decision).isEqualTo(VerificationDecision.VERIFIED);
+        assertThat(decision).isTrue();
         assertThat(drivingPolicy.getFailingReasonCodes()).isEmpty();
     }
 

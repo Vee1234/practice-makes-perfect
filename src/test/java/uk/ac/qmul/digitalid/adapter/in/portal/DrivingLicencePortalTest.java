@@ -55,7 +55,7 @@ class DrivingLicencePortalTest {
                 .collect(Collectors.toSet());
 
         assertThat(fieldNames).containsExactlyInAnyOrder(
-                "eligible", "minimumAgeMet", "restrictionBlock", "reasonCodes");
+                "eligible", "minimumAgeMet", "restrictionBlock", "name", "dateOfBirth", "reasonCodes");
     }
 
     @Test
@@ -65,7 +65,7 @@ class DrivingLicencePortalTest {
                 .collect(Collectors.toSet());
 
         assertThat(fieldNames).doesNotContain(
-                "name", "dateOfBirth", "nationality", "welfareBand",
+                "nationality", "welfareBand",
                 "restrictionText", "restrictionReason", "history", "status");
     }
 
@@ -75,19 +75,21 @@ class DrivingLicencePortalTest {
     void shouldBeEligible_whenActiveAdultIdentityHasNoBan() {
         repository.save(activeAdultIdentity());
 
-        DrivingLicenceResponse response = portal.checkLicenceEligibility(ID, CHECK_DATE);
+        DrivingLicenceResponse response = portal.checkLicenceEligibility(ID);
 
         assertThat(response.isEligible()).isTrue();
         assertThat(response.isMinimumAgeMet()).isTrue();
         assertThat(response.isRestrictionBlock()).isFalse();
         assertThat(response.getReasonCodes()).isEmpty();
+        assertThat(response.getName()).isEqualTo("Jane Doe");
+        assertThat(response.getDateOfBirth()).isEqualTo(ADULT_DOB);
     }
 
     @Test
     void shouldBeIneligible_whenActiveDrivingBanExists() {
         repository.save(identityWithActiveBan());
 
-        DrivingLicenceResponse response = portal.checkLicenceEligibility(ID, CHECK_DATE);
+        DrivingLicenceResponse response = portal.checkLicenceEligibility(ID);
 
         assertThat(response.isEligible()).isFalse();
         assertThat(response.isRestrictionBlock()).isTrue();
@@ -98,7 +100,7 @@ class DrivingLicencePortalTest {
     void shouldBeEligible_whenDrivingBanHasExpired() {
         repository.save(identityWithExpiredBan());
 
-        DrivingLicenceResponse response = portal.checkLicenceEligibility(ID, CHECK_DATE);
+        DrivingLicenceResponse response = portal.checkLicenceEligibility(ID);
 
         assertThat(response.isEligible()).isTrue();
         assertThat(response.isRestrictionBlock()).isFalse();
@@ -109,7 +111,7 @@ class DrivingLicencePortalTest {
     void shouldBeIneligible_whenIdentityIsRevoked() {
         repository.save(activeAdultIdentity().changeStatus(IdentityStatus.REVOKED, NOW).getPayload());
 
-        DrivingLicenceResponse response = portal.checkLicenceEligibility(ID, CHECK_DATE);
+        DrivingLicenceResponse response = portal.checkLicenceEligibility(ID);
 
         assertThat(response.isEligible()).isFalse();
         assertThat(response.getReasonCodes()).contains("INACTIVE_STATUS");
@@ -117,17 +119,19 @@ class DrivingLicencePortalTest {
 
     @Test
     void shouldBeIneligible_whenIdentityDoesNotExist() {
-        DrivingLicenceResponse response = portal.checkLicenceEligibility(ID, CHECK_DATE);
+        DrivingLicenceResponse response = portal.checkLicenceEligibility(ID);
 
         assertThat(response.isEligible()).isFalse();
         assertThat(response.getReasonCodes()).contains("NOT_FOUND");
+        assertThat(response.getName()).isNull();
+        assertThat(response.getDateOfBirth()).isNull();
     }
 
     @Test
     void shouldBeIneligible_whenApplicantIsBelowMinimumAge() {
         repository.save(DigitalId.create(ID, NAME, CHECK_DATE.minusYears(15), NOW));
 
-        DrivingLicenceResponse response = portal.checkLicenceEligibility(ID, CHECK_DATE);
+        DrivingLicenceResponse response = portal.checkLicenceEligibility(ID);
 
         assertThat(response.isEligible()).isFalse();
         assertThat(response.isMinimumAgeMet()).isFalse();

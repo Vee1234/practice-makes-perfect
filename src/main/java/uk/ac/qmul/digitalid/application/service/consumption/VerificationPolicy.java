@@ -4,5 +4,5 @@ import uk.ac.qmul.digitalid.domain.DigitalId;
 
 @FunctionalInterface
 public interface VerificationPolicy {
-    VerificationDecision evaluate(DigitalId identity);
+    boolean evaluate(DigitalId identity);
 }

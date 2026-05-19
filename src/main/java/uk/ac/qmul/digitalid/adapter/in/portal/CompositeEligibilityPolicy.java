@@ -1,6 +1,5 @@
 package uk.ac.qmul.digitalid.adapter.in.portal;
 
-import uk.ac.qmul.digitalid.application.service.consumption.VerificationDecision;
 import uk.ac.qmul.digitalid.application.service.consumption.VerificationPolicy;
 import uk.ac.qmul.digitalid.domain.DigitalId;
 
@@ -34,9 +33,9 @@ public final class CompositeEligibilityPolicy implements EligibilityRule, Verifi
     }
 
     @Override
-    public VerificationDecision evaluate(DigitalId identity) {
+    public boolean evaluate(DigitalId identity) {
         evaluate(new EligibilityContext(identity, checkDate));
-        return failingReasonCodes.isEmpty() ? VerificationDecision.VERIFIED : VerificationDecision.REJECTED;
+        return failingReasonCodes.isEmpty();
     }
 
     public List<String> getFailingReasonCodes() {

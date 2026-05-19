@@ -3,9 +3,10 @@ package uk.ac.qmul.digitalid.adapter.in.portal;
 import uk.ac.qmul.digitalid.application.auth.Organisation;
 import uk.ac.qmul.digitalid.application.auth.OrganisationRole;
 import uk.ac.qmul.digitalid.application.port.in.VerifyIdentityPort;
-import uk.ac.qmul.digitalid.application.service.consumption.VerificationDecision;
 import uk.ac.qmul.digitalid.application.service.consumption.VerificationRequest;
+import uk.ac.qmul.digitalid.domain.DigitalId;
 import uk.ac.qmul.digitalid.domain.DigitalIdNumber;
+import uk.ac.qmul.digitalid.domain.OperationResult;
 import uk.ac.qmul.digitalid.domain.RestrictionType;
 import uk.ac.qmul.digitalid.domain.WelfareBand;
 
@@ -32,24 +33,20 @@ public final class WelfarePortal {
         this.projector  = new WelfareEligibilityResponseProjector();
     }
 
-    public WelfareEligibilityResponse checkBenefitEligibility(DigitalIdNumber id,
-                                                               String submittedRegion,
-                                                               LocalDate checkDate) {
-        Objects.requireNonNull(id,             "id is required");
-        Objects.requireNonNull(submittedRegion, "submittedRegion is required");
-        Objects.requireNonNull(checkDate,      "checkDate is required");
+    public WelfareEligibilityResponse checkBenefitEligibility(DigitalIdNumber id) {
+        Objects.requireNonNull(id, "id is required");
+        LocalDate checkDate = LocalDate.now(clock);
 
         CompositeEligibilityPolicy policy = new CompositeEligibilityPolicy(
                 checkDate,
                 List.of(
                         new ActiveStatusRule(),
                         new NoActiveRestrictionRule(RestrictionType.WELFARE_REVIEW),
-                        new RegionMatchRule(submittedRegion),
                         new WelfareBandEligibilityRule(ELIGIBLE_BANDS)
                 )
         );
 
-        VerificationDecision decision = verifyPort.verify(new VerificationRequest(id, WELFARE_AUTHORITY, policy));
-        return projector.project(decision, policy.getFailingReasonCodes());
+        OperationResult<DigitalId> result = verifyPort.verify(new VerificationRequest(id, WELFARE_AUTHORITY, policy));
+        return projector.project(result, policy.getFailingReasonCodes());
     }
 }
