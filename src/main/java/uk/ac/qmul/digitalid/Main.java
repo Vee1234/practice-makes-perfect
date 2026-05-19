@@ -155,7 +155,7 @@ public class Main {
                 if (id.isEmpty()) return;
 
                 BankKycResponse response = portal.checkBasicKyc(id.get());
-
+                if (response.getReasonCodes().contains("NOT_FOUND")) { out.println("Identity not found."); return; }
                 out.println("Valid now:     " + response.isValidNow());
                 out.println("Name matched:  " + response.isNameMatched());
                 out.println("DOB matched:   " + response.isDobMatched());
@@ -174,7 +174,7 @@ public class Main {
                 if (id.isEmpty()) return;
 
                 DrivingLicenceResponse response = portal.checkLicenceEligibility(id.get());
-
+                if (response.getReasonCodes().contains("NOT_FOUND")) { out.println("Identity not found."); return; }
                 out.println("Eligible:          " + response.isEligible());
                 out.println("Minimum age met:   " + response.isMinimumAgeMet());
                 out.println("Restriction block: " + response.isRestrictionBlock());
@@ -192,7 +192,7 @@ public class Main {
                 if (id.isEmpty()) return;
 
                 WelfareEligibilityResponse response = portal.checkBenefitEligibility(id.get());
-
+                if (response.getReasonCodes().contains("NOT_FOUND")) { out.println("Identity not found."); return; }
                 out.println("Eligible:       " + response.isEligible());
                 out.println("Region matched: " + response.isRegionMatched());
                 out.println("Band category:  " + response.getBandCategory());
