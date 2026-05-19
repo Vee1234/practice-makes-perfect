@@ -3,9 +3,10 @@ package uk.ac.qmul.digitalid.adapter.in.portal;
 import uk.ac.qmul.digitalid.application.auth.Organisation;
 import uk.ac.qmul.digitalid.application.auth.OrganisationRole;
 import uk.ac.qmul.digitalid.application.port.in.VerifyIdentityPort;
-import uk.ac.qmul.digitalid.application.service.consumption.VerificationDecision;
 import uk.ac.qmul.digitalid.application.service.consumption.VerificationRequest;
+import uk.ac.qmul.digitalid.domain.DigitalId;
 import uk.ac.qmul.digitalid.domain.DigitalIdNumber;
+import uk.ac.qmul.digitalid.domain.OperationResult;
 
 import java.time.Clock;
 import java.util.Objects;
@@ -28,7 +29,7 @@ public final class EmployerPortal {
 
     public RightToWorkResponse verifyRightToWork(DigitalIdNumber id) {
         Objects.requireNonNull(id, "id is required");
-        VerificationDecision decision = verifyPort.verify(new VerificationRequest(id, EMPLOYER, policy));
-        return projector.project(id, decision, clock.instant());
+        OperationResult<DigitalId> result = verifyPort.verify(new VerificationRequest(id, EMPLOYER, policy));
+        return projector.project(id.value(), result, clock.instant());
     }
 }

@@ -3,9 +3,10 @@ package uk.ac.qmul.digitalid.adapter.in.portal;
 import uk.ac.qmul.digitalid.application.auth.Organisation;
 import uk.ac.qmul.digitalid.application.auth.OrganisationRole;
 import uk.ac.qmul.digitalid.application.port.in.VerifyIdentityPort;
-import uk.ac.qmul.digitalid.application.service.consumption.VerificationDecision;
 import uk.ac.qmul.digitalid.application.service.consumption.VerificationRequest;
+import uk.ac.qmul.digitalid.domain.DigitalId;
 import uk.ac.qmul.digitalid.domain.DigitalIdNumber;
+import uk.ac.qmul.digitalid.domain.OperationResult;
 import uk.ac.qmul.digitalid.domain.RestrictionType;
 import uk.ac.qmul.digitalid.domain.WelfareBand;
 
@@ -45,7 +46,7 @@ public final class WelfarePortal {
                 )
         );
 
-        VerificationDecision decision = verifyPort.verify(new VerificationRequest(id, WELFARE_AUTHORITY, policy));
-        return projector.project(decision, policy.getFailingReasonCodes());
+        OperationResult<DigitalId> result = verifyPort.verify(new VerificationRequest(id, WELFARE_AUTHORITY, policy));
+        return projector.project(result, policy.getFailingReasonCodes());
     }
 }

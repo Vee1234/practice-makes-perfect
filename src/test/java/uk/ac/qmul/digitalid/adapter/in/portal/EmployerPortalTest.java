@@ -27,6 +27,7 @@ class EmployerPortalTest {
 
     private static final Instant NOW = Instant.parse("2026-01-01T00:00:00Z");
     private static final DigitalIdNumber ID = DigitalIdNumber.of("DID-000001");
+    private static final LocalDate DOB = LocalDate.of(1990, 1, 1);
 
     private InMemoryDigitalIdRepository repository;
     private EmployerPortal portal;
@@ -50,16 +51,17 @@ class EmployerPortalTest {
                 .map(Field::getName)
                 .collect(Collectors.toSet());
 
-        assertThat(fieldNames).containsExactlyInAnyOrder("digitalId", "validNow", "reasonCode", "checkedAt");
+        assertThat(fieldNames).containsExactlyInAnyOrder(
+                "digitalId", "validNow", "name", "dateOfBirth", "reasonCode", "checkedAt");
     }
 
     @Test
-    void shouldNotExposeNameDobRestrictionsOrHistory_inResponse() {
+    void shouldNotExposeRestrictionsHistoryOrImmigrationData_inResponse() {
         Set<String> fieldNames = Arrays.stream(RightToWorkResponse.class.getDeclaredFields())
                 .map(Field::getName)
                 .collect(Collectors.toSet());
 
-        assertThat(fieldNames).doesNotContain("name", "dateOfBirth", "restrictions", "history",
+        assertThat(fieldNames).doesNotContain("restrictions", "history",
                 "nationality", "welfareBand", "currentLegalName");
     }
 
@@ -92,13 +94,15 @@ class EmployerPortalTest {
     }
 
     @Test
-    void shouldPopulateDigitalIdAndCheckedAt_inResponse() {
+    void shouldPopulateDigitalIdCheckedAtNameAndDob_inResponse() {
         repository.save(identity(IdentityStatus.ACTIVE));
 
         RightToWorkResponse response = portal.verifyRightToWork(ID);
 
         assertThat(response.getDigitalId()).isEqualTo("DID-000001");
         assertThat(response.getCheckedAt()).isEqualTo(NOW);
+        assertThat(response.getName()).isEqualTo("Jane Doe");
+        assertThat(response.getDateOfBirth()).isEqualTo(DOB);
     }
 
     @Test
@@ -106,10 +110,18 @@ class EmployerPortalTest {
         assertThat(portal.verifyRightToWork(ID).getReasonCode()).isNotNull();
     }
 
+    @Test
+    void shouldReturnNullNameAndDob_whenIdentityDoesNotExist() {
+        RightToWorkResponse response = portal.verifyRightToWork(ID);
+
+        assertThat(response.getName()).isNull();
+        assertThat(response.getDateOfBirth()).isNull();
+    }
+
     // helper
 
     private DigitalId identity(IdentityStatus target) {
-        DigitalId base = DigitalId.create(ID, new LegalName("Jane Doe"), LocalDate.of(1990, 1, 1), NOW);
+        DigitalId base = DigitalId.create(ID, new LegalName("Jane Doe"), DOB, NOW);
         if (target == IdentityStatus.ACTIVE) return base;
         return base.changeStatus(target, NOW).getPayload();
     }

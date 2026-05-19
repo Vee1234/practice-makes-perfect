@@ -1,15 +1,21 @@
 package uk.ac.qmul.digitalid.adapter.in.portal;
 
-import uk.ac.qmul.digitalid.application.service.consumption.VerificationDecision;
-import uk.ac.qmul.digitalid.domain.DigitalIdNumber;
+import uk.ac.qmul.digitalid.domain.DigitalId;
+import uk.ac.qmul.digitalid.domain.IdentityStatus;
+import uk.ac.qmul.digitalid.domain.OperationResult;
 
 import java.time.Instant;
 
 final class RightToWorkResponseProjector {
 
-    RightToWorkResponse project(DigitalIdNumber id, VerificationDecision decision, Instant checkedAt) {
-        boolean validNow = decision == VerificationDecision.VERIFIED;
-        String reasonCode = validNow ? null : decision.name();
-        return new RightToWorkResponse(id.value(), validNow, reasonCode, checkedAt);
+    RightToWorkResponse project(String digitalId, OperationResult<DigitalId> result, Instant checkedAt) {
+        if (!result.isSuccess()) {
+            return new RightToWorkResponse(digitalId, false, null, null, "NOT_FOUND", checkedAt);
+        }
+        DigitalId identity = result.getPayload();
+        boolean validNow = identity.getStatus() == IdentityStatus.ACTIVE;
+        String reasonCode = validNow ? null : "INACTIVE_STATUS";
+        return new RightToWorkResponse(digitalId, validNow,
+                identity.getCurrentLegalName().value(), identity.getDateOfBirth(), reasonCode, checkedAt);
     }
 }

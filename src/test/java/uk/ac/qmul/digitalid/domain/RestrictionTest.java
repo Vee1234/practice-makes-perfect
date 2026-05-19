@@ -24,7 +24,7 @@ class RestrictionTest {
 
     @Test
     void shouldCreateRestriction_whenEndsOnIsAbsent() {
-        Restriction restriction = new Restriction(RestrictionType.BORDER_HOLD, START, null, "HOLD");
+        Restriction restriction = new Restriction(RestrictionType.DRIVING_BAN, START, null, "HOLD");
 
         assertThat(restriction.getEndsOn()).isNull();
     }
@@ -44,7 +44,7 @@ class RestrictionTest {
 
     @Test
     void shouldBeActive_whenOpenEndedAndDateIsAfterStart() {
-        Restriction restriction = new Restriction(RestrictionType.BORDER_HOLD, START, null, "HOLD");
+        Restriction restriction = new Restriction(RestrictionType.DRIVING_BAN, START, null, "HOLD");
 
         assertThat(restriction.isActiveOn(LocalDate.of(2030, 1, 1))).isTrue();
     }

@@ -55,7 +55,7 @@ class BankPortalTest {
                 .collect(Collectors.toSet());
 
         assertThat(fieldNames).containsExactlyInAnyOrder(
-                "validNow", "nameMatched", "dobMatched", "kycDecision", "reasonCodes");
+                "validNow", "name", "dateOfBirth", "kycDecision", "reasonCodes");
     }
 
     @Test
@@ -65,8 +65,9 @@ class BankPortalTest {
                 .collect(Collectors.toSet());
 
         assertThat(fieldNames).doesNotContain(
-                "digitalId", "name", "dateOfBirth", "history", "nationality",
-                "welfareBand", "restrictions", "residentialRegion");
+                "digitalId", "history", "nationality",
+                "welfareBand", "restrictions", "residentialRegion",
+                "nameMatched", "dobMatched");
     }
 
     // 13.3 — BankPortal facade behaviour
@@ -80,6 +81,8 @@ class BankPortalTest {
         assertThat(response.isValidNow()).isTrue();
         assertThat(response.getKycDecision()).isEqualTo(KycDecision.PASS);
         assertThat(response.getReasonCodes()).isEmpty();
+        assertThat(response.getName()).isEqualTo("Jane Doe");
+        assertThat(response.getDateOfBirth()).isEqualTo(DOB);
     }
 
     @Test
@@ -101,6 +104,8 @@ class BankPortalTest {
         assertThat(response.isValidNow()).isFalse();
         assertThat(response.getKycDecision()).isEqualTo(KycDecision.FAIL);
         assertThat(response.getReasonCodes()).contains("NOT_FOUND");
+        assertThat(response.getName()).isNull();
+        assertThat(response.getDateOfBirth()).isNull();
     }
 
     @Test

@@ -303,9 +303,11 @@ public class Main {
 
                 RightToWorkResponse response = portal.verifyRightToWork(id.get());
                 if ("NOT_FOUND".equals(response.getReasonCode())) { out.println("Identity not found."); return; }
-                out.println("Valid now:   " + response.isValidNow());
-                out.println("Reason code: " + response.getReasonCode());
-                out.println("Checked at:  " + response.getCheckedAt());
+                out.println("Valid now:     " + response.isValidNow());
+                out.println("Name:          " + response.getName());
+                out.println("Date of birth: " + response.getDateOfBirth());
+                out.println("Reason code:   " + response.getReasonCode());
+                out.println("Checked at:    " + response.getCheckedAt());
             }
         };
     }
@@ -321,8 +323,8 @@ public class Main {
                 BankKycResponse response = portal.checkBasicKyc(id.get());
                 if (response.getReasonCodes().contains("NOT_FOUND")) { out.println("Identity not found."); return; }
                 out.println("Valid now:     " + response.isValidNow());
-                out.println("Name matched:  " + response.isNameMatched());
-                out.println("DOB matched:   " + response.isDobMatched());
+                out.println("Name:          " + response.getName());
+                out.println("Date of birth: " + response.getDateOfBirth());
                 out.println("KYC decision:  " + response.getKycDecision());
                 out.println("Reason codes:  " + response.getReasonCodes());
             }
@@ -340,6 +342,8 @@ public class Main {
                 DrivingLicenceResponse response = portal.checkLicenceEligibility(id.get());
                 if (response.getReasonCodes().contains("NOT_FOUND")) { out.println("Identity not found."); return; }
                 out.println("Eligible:          " + response.isEligible());
+                out.println("Name:              " + response.getName());
+                out.println("Date of birth:     " + response.getDateOfBirth());
                 out.println("Minimum age met:   " + response.isMinimumAgeMet());
                 out.println("Restriction block: " + response.isRestrictionBlock());
                 out.println("Reason codes:      " + response.getReasonCodes());
@@ -358,6 +362,8 @@ public class Main {
                 WelfareEligibilityResponse response = portal.checkBenefitEligibility(id.get());
                 if (response.getReasonCodes().contains("NOT_FOUND")) { out.println("Identity not found."); return; }
                 out.println("Eligible:       " + response.isEligible());
+                out.println("Name:           " + response.getName());
+                out.println("Date of birth:  " + response.getDateOfBirth());
                 out.println("Band category:  " + response.getBandCategory());
                 out.println("Reason codes:   " + response.getReasonCodes());
             }

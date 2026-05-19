@@ -56,7 +56,7 @@ class WelfarePortalTest {
                 .collect(Collectors.toSet());
 
         assertThat(fieldNames).containsExactlyInAnyOrder(
-                "eligible", "bandCategory", "reasonCodes");
+                "eligible", "name", "dateOfBirth", "bandCategory", "reasonCodes");
     }
 
     @Test
@@ -66,7 +66,7 @@ class WelfarePortalTest {
                 .collect(Collectors.toSet());
 
         assertThat(fieldNames).doesNotContain(
-                "name", "dateOfBirth", "welfareBand", "taxHistory",
+                "welfareBand", "taxHistory",
                 "bankFlags", "history", "nationality", "restrictions");
     }
 
@@ -81,6 +81,8 @@ class WelfarePortalTest {
         assertThat(response.isEligible()).isTrue();
         assertThat(response.getBandCategory()).isEqualTo(BandCategory.ELIGIBLE);
         assertThat(response.getReasonCodes()).isEmpty();
+        assertThat(response.getName()).isEqualTo("Jane Doe");
+        assertThat(response.getDateOfBirth()).isEqualTo(ADULT_DOB);
     }
 
     @Test
@@ -90,6 +92,8 @@ class WelfarePortalTest {
         assertThat(response.isEligible()).isFalse();
         assertThat(response.getBandCategory()).isEqualTo(BandCategory.UNKNOWN);
         assertThat(response.getReasonCodes()).contains("NOT_FOUND");
+        assertThat(response.getName()).isNull();
+        assertThat(response.getDateOfBirth()).isNull();
     }
 
     @Test

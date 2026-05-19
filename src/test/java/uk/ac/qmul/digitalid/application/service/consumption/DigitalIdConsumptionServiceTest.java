@@ -37,27 +37,30 @@ class DigitalIdConsumptionServiceTest {
     }
 
     @Test
-    void shouldReturnNotFound_whenIdentityDoesNotExist() {
-        VerificationRequest request = new VerificationRequest(ID, EMPLOYER, identity -> VerificationDecision.VERIFIED);
+    void shouldReturnFailure_whenIdentityDoesNotExist() {
+        VerificationRequest request = new VerificationRequest(ID, EMPLOYER, identity -> true);
 
-        VerificationDecision decision = service.verify(request);
+        OperationResult<DigitalId> result = service.verify(request);
 
-        assertThat(decision).isEqualTo(VerificationDecision.NOT_FOUND);
+        assertThat(result.isSuccess()).isFalse();
+        assertThat(result.getError().code()).isEqualTo(ErrorCode.NOT_FOUND);
     }
 
     @Test
-    void shouldDelegateToPolicy_whenIdentityExists() {
-        repository.save(DigitalId.create(ID, new LegalName("Jane Doe"), LocalDate.of(1990, 1, 1), NOW));
-        VerificationRequest request = new VerificationRequest(ID, EMPLOYER, identity -> VerificationDecision.VERIFIED);
+    void shouldReturnIdentity_whenIdentityExists() {
+        DigitalId saved = DigitalId.create(ID, new LegalName("Jane Doe"), LocalDate.of(1990, 1, 1), NOW);
+        repository.save(saved);
+        VerificationRequest request = new VerificationRequest(ID, EMPLOYER, identity -> true);
 
-        VerificationDecision decision = service.verify(request);
+        OperationResult<DigitalId> result = service.verify(request);
 
-        assertThat(decision).isEqualTo(VerificationDecision.VERIFIED);
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.getPayload().getId()).isEqualTo(ID);
     }
 
     @Test
     void shouldAudit_onEveryVerification() {
-        VerificationRequest request = new VerificationRequest(ID, EMPLOYER, identity -> VerificationDecision.VERIFIED);
+        VerificationRequest request = new VerificationRequest(ID, EMPLOYER, identity -> true);
 
         service.verify(request);
 

@@ -71,7 +71,7 @@ class DigitalIdTest {
         DigitalId digitalId = activeIdentity("DID-000012");
         Restriction ban = new Restriction(RestrictionType.DRIVING_BAN,
                 LocalDate.of(2026, 1, 1), null, "COURT_ORDER");
-        Restriction hold = new Restriction(RestrictionType.BORDER_HOLD,
+        Restriction hold = new Restriction(RestrictionType.FINANCIAL_REVIEW,
                 LocalDate.of(2026, 1, 1), null, "IMMIGRATION");
 
         DigitalId withBan = digitalId.addRestriction(ban, LocalDate.of(2026, 1, 1)).getPayload();

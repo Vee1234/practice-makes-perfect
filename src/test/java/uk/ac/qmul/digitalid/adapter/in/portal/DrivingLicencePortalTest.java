@@ -55,7 +55,7 @@ class DrivingLicencePortalTest {
                 .collect(Collectors.toSet());
 
         assertThat(fieldNames).containsExactlyInAnyOrder(
-                "eligible", "minimumAgeMet", "restrictionBlock", "reasonCodes");
+                "eligible", "minimumAgeMet", "restrictionBlock", "name", "dateOfBirth", "reasonCodes");
     }
 
     @Test
@@ -65,7 +65,7 @@ class DrivingLicencePortalTest {
                 .collect(Collectors.toSet());
 
         assertThat(fieldNames).doesNotContain(
-                "name", "dateOfBirth", "nationality", "welfareBand",
+                "nationality", "welfareBand",
                 "restrictionText", "restrictionReason", "history", "status");
     }
 
@@ -81,6 +81,8 @@ class DrivingLicencePortalTest {
         assertThat(response.isMinimumAgeMet()).isTrue();
         assertThat(response.isRestrictionBlock()).isFalse();
         assertThat(response.getReasonCodes()).isEmpty();
+        assertThat(response.getName()).isEqualTo("Jane Doe");
+        assertThat(response.getDateOfBirth()).isEqualTo(ADULT_DOB);
     }
 
     @Test
@@ -121,6 +123,8 @@ class DrivingLicencePortalTest {
 
         assertThat(response.isEligible()).isFalse();
         assertThat(response.getReasonCodes()).contains("NOT_FOUND");
+        assertThat(response.getName()).isNull();
+        assertThat(response.getDateOfBirth()).isNull();
     }
 
     @Test

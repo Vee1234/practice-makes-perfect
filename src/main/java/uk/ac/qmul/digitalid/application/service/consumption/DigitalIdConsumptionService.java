@@ -5,6 +5,9 @@ import uk.ac.qmul.digitalid.application.audit.AuditEventPublisher;
 import uk.ac.qmul.digitalid.application.port.in.VerifyIdentityPort;
 import uk.ac.qmul.digitalid.application.port.out.DigitalIdRepository;
 import uk.ac.qmul.digitalid.domain.DigitalId;
+import uk.ac.qmul.digitalid.domain.DomainError;
+import uk.ac.qmul.digitalid.domain.ErrorCode;
+import uk.ac.qmul.digitalid.domain.OperationResult;
 
 import java.time.Clock;
 import java.util.Objects;
@@ -23,22 +26,22 @@ public final class DigitalIdConsumptionService implements VerifyIdentityPort {
     }
 
     @Override
-    public VerificationDecision verify(VerificationRequest request) {
+    public OperationResult<DigitalId> verify(VerificationRequest request) {
         Objects.requireNonNull(request, "request is required");
 
         Optional<DigitalId> found = repository.findById(request.getDigitalIdNumber());
+        if (found.isEmpty()) {
+            audit(request, false, "NOT_FOUND");
+            return OperationResult.failure(new DomainError(ErrorCode.NOT_FOUND, "Identity not found"));
+        }
 
-        VerificationDecision decision = found
-                .map(identity -> request.getPolicy().evaluate(identity))
-                .orElse(VerificationDecision.NOT_FOUND);
-
-        audit(request, decision);
-        return decision;
+        DigitalId identity = found.get();
+        boolean verified = request.getPolicy().evaluate(identity);
+        audit(request, verified, verified ? null : "REJECTED");
+        return OperationResult.success(identity);
     }
 
-    private void audit(VerificationRequest request, VerificationDecision decision) {
-        boolean success = decision == VerificationDecision.VERIFIED;
-        String reasonCode = success ? null : decision.name();
+    private void audit(VerificationRequest request, boolean success, String reasonCode) {
         auditPublisher.notifyObservers(new AuditEvent(
                 "VERIFY_IDENTITY",
                 request.getRequestedBy().getOrganisationId(),
