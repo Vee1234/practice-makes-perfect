@@ -22,42 +22,46 @@ public final class ConsoleCommandRunner {
     public void run(Scanner in, PrintStream out) {
         List<String> orgs = List.copyOf(orgCommands.keySet());
 
-        out.println("=== Digital ID Platform ===");
-        out.println("Select your organisation:");
-        for (int i = 0; i < orgs.size(); i++) {
-            out.printf("  %d. %s%n", i + 1, orgs.get(i));
+        while (true) {
+            out.println("\n=== Digital ID Platform ===");
+            out.println("Select your organisation (0 to exit):");
+            for (int i = 0; i < orgs.size(); i++) {
+                out.printf("  %d. %s%n", i + 1, orgs.get(i));
+            }
+
+            String orgInput = readLine(in);
+            if (orgInput == null || orgInput.equals("0")) return;
+
+            String orgName = resolveSelection(orgInput, orgs);
+            if (orgName == null) {
+                out.println("Unknown organisation. Please try again.");
+                continue;
+            }
+
+            List<ConsoleCommand> commands = commandsFor(orgName);
+
+            out.println("\nOrganisation: " + orgName);
+            out.println("Select an operation (0 to go back):");
+            for (int i = 0; i < commands.size(); i++) {
+                out.printf("  %d. %s%n", i + 1, commands.get(i).getDescription());
+            }
+
+            String opInput = readLine(in);
+            if (opInput == null || opInput.equals("0")) continue;
+
+            ConsoleCommand command = resolveCommand(opInput, commands);
+            if (command == null) {
+                out.println("Invalid selection. Please try again.");
+                continue;
+            }
+
+            out.println();
+            command.execute(in, out);
         }
+    }
 
-        String orgInput = in.nextLine().trim();
-        String orgName = resolveSelection(orgInput, orgs);
-
-        if (orgName == null) {
-            out.println("Unknown organisation. Exiting.");
-            return;
-        }
-
-        List<ConsoleCommand> commands = commandsFor(orgName);
-        if (commands.isEmpty()) {
-            out.println("No operations available for " + orgName + ".");
-            return;
-        }
-
-        out.println("\nOrganisation: " + orgName);
-        out.println("Select an operation:");
-        for (int i = 0; i < commands.size(); i++) {
-            out.printf("  %d. %s%n", i + 1, commands.get(i).getDescription());
-        }
-
-        String opInput = in.nextLine().trim();
-        ConsoleCommand command = resolveCommand(opInput, commands);
-
-        if (command == null) {
-            out.println("Invalid selection. Exiting.");
-            return;
-        }
-
-        out.println();
-        command.execute(in, out);
+    private String readLine(Scanner in) {
+        return in.hasNextLine() ? in.nextLine().trim() : null;
     }
 
     private String resolveSelection(String input, List<String> options) {

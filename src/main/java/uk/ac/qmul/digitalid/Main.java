@@ -26,7 +26,9 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Scanner;
+import java.util.function.Function;
 
 public class Main {
 
@@ -90,22 +92,18 @@ public class Main {
             public String getDescription() { return "Create a new Digital ID"; }
 
             public void execute(Scanner in, PrintStream out) {
-                out.print("Digital ID number (e.g. DID-123456): ");
-                String id = in.nextLine().trim();
-                out.print("Full legal name: ");
-                String name = in.nextLine().trim();
-                out.print("Date of birth (YYYY-MM-DD): ");
-                String dob = in.nextLine().trim();
+                Optional<DigitalIdNumber> id   = readField(in, out, "Digital ID number (e.g. DID-123456)", DigitalIdNumber::of);
+                if (id.isEmpty()) return;
+                Optional<LegalName> name       = readField(in, out, "Full legal name", LegalName::new);
+                if (name.isEmpty()) return;
+                Optional<LocalDate> dob        = readField(in, out, "Date of birth (YYYY-MM-DD)", LocalDate::parse);
+                if (dob.isEmpty()) return;
 
                 OperationResult<?> result = port.createIdentity(new IdentityCreateCommand(
-                        DigitalIdNumber.of(id), new LegalName(name),
-                        LocalDate.parse(dob), CENTRAL_AUTHORITY));
+                        id.get(), name.get(), dob.get(), CENTRAL_AUTHORITY));
 
-                if (result.isSuccess()) {
-                    out.println("Identity created: " + id);
-                } else {
-                    out.println("Failed: " + result.getError().message());
-                }
+                if (result.isSuccess()) out.println("Identity created: " + id.get().value());
+                else                   out.println("Failed: " + result.getError().message());
             }
         };
     }
@@ -115,17 +113,14 @@ public class Main {
             public String getDescription() { return "Suspend a Digital ID"; }
 
             public void execute(Scanner in, PrintStream out) {
-                out.print("Digital ID number: ");
-                String id = in.nextLine().trim();
+                Optional<DigitalIdNumber> id = readField(in, out, "Digital ID number", DigitalIdNumber::of);
+                if (id.isEmpty()) return;
 
                 OperationResult<?> result = port.changeStatus(new ChangeStatusCommand(
-                        DigitalIdNumber.of(id), IdentityStatus.SUSPENDED, CENTRAL_AUTHORITY));
+                        id.get(), IdentityStatus.SUSPENDED, CENTRAL_AUTHORITY));
 
-                if (result.isSuccess()) {
-                    out.println("Identity suspended: " + id);
-                } else {
-                    out.println("Failed: " + result.getError().message());
-                }
+                if (result.isSuccess()) out.println("Identity suspended: " + id.get().value());
+                else                   out.println("Failed: " + result.getError().message());
             }
         };
     }
@@ -135,10 +130,10 @@ public class Main {
             public String getDescription() { return "Verify right to work"; }
 
             public void execute(Scanner in, PrintStream out) {
-                out.print("Digital ID number: ");
-                String id = in.nextLine().trim();
+                Optional<DigitalIdNumber> id = readField(in, out, "Digital ID number", DigitalIdNumber::of);
+                if (id.isEmpty()) return;
 
-                RightToWorkResponse response = portal.verifyRightToWork(DigitalIdNumber.of(id));
+                RightToWorkResponse response = portal.verifyRightToWork(id.get());
                 out.println("Valid now:   " + response.isValidNow());
                 out.println("Reason code: " + response.getReasonCode());
                 out.println("Checked at:  " + response.getCheckedAt());
@@ -151,15 +146,15 @@ public class Main {
             public String getDescription() { return "Run basic KYC check"; }
 
             public void execute(Scanner in, PrintStream out) {
-                out.print("Digital ID number: ");
-                String id = in.nextLine().trim();
-                out.print("Submitted full name: ");
-                String name = in.nextLine().trim();
-                out.print("Submitted date of birth (YYYY-MM-DD): ");
-                String dob = in.nextLine().trim();
+                Optional<DigitalIdNumber> id = readField(in, out, "Digital ID number", DigitalIdNumber::of);
+                if (id.isEmpty()) return;
+                Optional<LegalName> name     = readField(in, out, "Submitted full name", LegalName::new);
+                if (name.isEmpty()) return;
+                Optional<LocalDate> dob      = readField(in, out, "Submitted date of birth (YYYY-MM-DD)", LocalDate::parse);
+                if (dob.isEmpty()) return;
 
-                BankKycResponse response = portal.checkBasicKyc(new BankKycRequest(
-                        DigitalIdNumber.of(id), new LegalName(name), LocalDate.parse(dob)));
+                BankKycResponse response = portal.checkBasicKyc(
+                        new BankKycRequest(id.get(), name.get(), dob.get()));
 
                 out.println("Valid now:     " + response.isValidNow());
                 out.println("Name matched:  " + response.isNameMatched());
@@ -175,16 +170,16 @@ public class Main {
             public String getDescription() { return "Check driving licence eligibility"; }
 
             public void execute(Scanner in, PrintStream out) {
-                out.print("Digital ID number: ");
-                String id = in.nextLine().trim();
+                Optional<DigitalIdNumber> id = readField(in, out, "Digital ID number", DigitalIdNumber::of);
+                if (id.isEmpty()) return;
 
                 DrivingLicenceResponse response =
-                        portal.checkLicenceEligibility(DigitalIdNumber.of(id), LocalDate.now());
+                        portal.checkLicenceEligibility(id.get(), LocalDate.now());
 
-                out.println("Eligible:         " + response.isEligible());
-                out.println("Minimum age met:  " + response.isMinimumAgeMet());
-                out.println("Restriction block:" + response.isRestrictionBlock());
-                out.println("Reason codes:     " + response.getReasonCodes());
+                out.println("Eligible:          " + response.isEligible());
+                out.println("Minimum age met:   " + response.isMinimumAgeMet());
+                out.println("Restriction block: " + response.isRestrictionBlock());
+                out.println("Reason codes:      " + response.getReasonCodes());
             }
         };
     }
@@ -194,18 +189,21 @@ public class Main {
             public String getDescription() { return "Check benefit eligibility"; }
 
             public void execute(Scanner in, PrintStream out) {
-                out.print("Digital ID number: ");
-                String id = in.nextLine().trim();
-                out.print("Submitted residential region: ");
-                String region = in.nextLine().trim();
+                Optional<DigitalIdNumber> id = readField(in, out, "Digital ID number", DigitalIdNumber::of);
+                if (id.isEmpty()) return;
+                Optional<String> region      = readField(in, out, "Residential region", r -> {
+                    if (r.isBlank()) throw new IllegalArgumentException("Region cannot be blank");
+                    return r;
+                });
+                if (region.isEmpty()) return;
 
                 WelfareEligibilityResponse response =
-                        portal.checkBenefitEligibility(DigitalIdNumber.of(id), region, LocalDate.now());
+                        portal.checkBenefitEligibility(id.get(), region.get(), LocalDate.now());
 
-                out.println("Eligible:        " + response.isEligible());
-                out.println("Region matched:  " + response.isRegionMatched());
-                out.println("Band category:   " + response.getBandCategory());
-                out.println("Reason codes:    " + response.getReasonCodes());
+                out.println("Eligible:       " + response.isEligible());
+                out.println("Region matched: " + response.isRegionMatched());
+                out.println("Band category:  " + response.getBandCategory());
+                out.println("Reason codes:   " + response.getReasonCodes());
             }
         };
     }
@@ -225,5 +223,22 @@ public class Main {
                         s.isSuccess(), s.getReasonCode()));
             }
         };
+    }
+
+    // --- shared input helper ---
+
+    private static <T> Optional<T> readField(Scanner in, PrintStream out,
+                                              String prompt, Function<String, T> parser) {
+        while (true) {
+            out.print(prompt + " (0 to go back): ");
+            if (!in.hasNextLine()) return Optional.empty();
+            String raw = in.nextLine().trim();
+            if (raw.equals("0")) return Optional.empty();
+            try {
+                return Optional.of(parser.apply(raw));
+            } catch (Exception e) {
+                out.println("  Invalid: " + e.getMessage() + ". Please try again.");
+            }
+        }
     }
 }

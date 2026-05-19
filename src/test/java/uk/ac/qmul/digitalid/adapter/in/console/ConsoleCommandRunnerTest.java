@@ -12,9 +12,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ConsoleCommandRunnerTest {
 
-    private static final ConsoleCommand VERIFY_CMD  = command("Verify identity");
-    private static final ConsoleCommand KYC_CMD     = command("Check KYC");
-    private static final ConsoleCommand AUDIT_CMD   = command("View audit log");
+    private static final ConsoleCommand VERIFY_CMD = command("Verify identity");
+    private static final ConsoleCommand KYC_CMD    = command("Check KYC");
+    private static final ConsoleCommand AUDIT_CMD  = command("View audit log");
 
     private static final Map<String, List<ConsoleCommand>> ORG_COMMANDS = Map.of(
             "EMPLOYER", List.of(VERIFY_CMD),
@@ -42,7 +42,7 @@ class ConsoleCommandRunnerTest {
         assertThat(runner.commandsFor("UNKNOWN_ORG")).isEmpty();
     }
 
-    // run — org selection by number, then operation selection by number
+    // run — navigation and execution
 
     @Test
     void run_shouldExecuteCommand_whenValidOrgAndOperationSelected() {
@@ -54,21 +54,35 @@ class ConsoleCommandRunnerTest {
         ConsoleCommandRunner singleRunner = new ConsoleCommandRunner(
                 Map.of("EMPLOYER", List.of(trackedCmd)));
 
-        simulate(singleRunner, "1\n1\n");
+        simulate(singleRunner, "1\n1\n0\n");
 
         assertThat(executed.toString()).isEqualTo("executed");
     }
 
     @Test
-    void run_shouldPrintUnknownOrg_whenSelectionOutOfRange() {
-        String output = simulate(runner, "99\n");
+    void run_shouldRetryOrgMenu_whenSelectionOutOfRange() {
+        String output = simulate(runner, "99\n0\n");
         assertThat(output).contains("Unknown organisation");
     }
 
     @Test
-    void run_shouldPrintInvalidSelection_whenOperationOutOfRange() {
-        String output = simulate(runner, "1\n99\n");
+    void run_shouldReturnToOrgMenu_whenInvalidOperationEntered() {
+        // selects org 1, enters invalid op 99, loops back to org menu, then exits
+        String output = simulate(runner, "1\n99\n0\n");
         assertThat(output).contains("Invalid selection");
+    }
+
+    @Test
+    void run_shouldReturnToOrgMenu_whenUserEntersZeroAtOperationMenu() {
+        // selects org 1, enters 0 to go back, then exits from org menu
+        String output = simulate(runner, "1\n0\n0\n");
+        assertThat(output).contains("Digital ID Platform");
+    }
+
+    @Test
+    void run_shouldExit_whenUserEntersZeroAtOrgMenu() {
+        String output = simulate(runner, "0\n");
+        assertThat(output).contains("Digital ID Platform");
     }
 
     @Test
@@ -81,7 +95,7 @@ class ConsoleCommandRunnerTest {
         ConsoleCommandRunner singleRunner = new ConsoleCommandRunner(
                 Map.of("EMPLOYER", List.of(trackedCmd)));
 
-        simulate(singleRunner, "employer\n1\n");
+        simulate(singleRunner, "employer\n1\n0\n");
 
         assertThat(executed.toString()).isEqualTo("executed");
     }
