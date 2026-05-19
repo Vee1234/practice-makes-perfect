@@ -61,7 +61,7 @@ class DigitalIdConsumptionServiceTest {
 
         service.verify(request);
 
-        assertThat(auditSink.events()).hasSize(1);
-        assertThat(auditSink.events().get(0).getEventType()).isEqualTo("VERIFY_IDENTITY");
+        assertThat(auditSink.findAll()).hasSize(1);
+        assertThat(auditSink.findAll().get(0).getEventType()).isEqualTo("VERIFY_IDENTITY");
     }
 }

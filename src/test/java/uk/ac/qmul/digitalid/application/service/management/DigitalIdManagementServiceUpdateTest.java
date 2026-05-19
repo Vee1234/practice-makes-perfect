@@ -109,8 +109,8 @@ class DigitalIdManagementServiceUpdateTest {
 
         service.updateMutableAttributes(command);
 
-        assertThat(auditSink.events()).hasSize(1);
-        assertThat(auditSink.events().get(0).isSuccess()).isTrue();
+        assertThat(auditSink.findAll()).hasSize(1);
+        assertThat(auditSink.findAll().get(0).isSuccess()).isTrue();
     }
 
     @Test
@@ -120,7 +120,7 @@ class DigitalIdManagementServiceUpdateTest {
 
         service.updateMutableAttributes(command);
 
-        assertThat(auditSink.events()).hasSize(1);
-        assertThat(auditSink.events().get(0).isSuccess()).isFalse();
+        assertThat(auditSink.findAll()).hasSize(1);
+        assertThat(auditSink.findAll().get(0).isSuccess()).isFalse();
     }
 }
