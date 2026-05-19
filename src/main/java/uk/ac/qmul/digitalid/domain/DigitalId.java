@@ -25,6 +25,10 @@ public final class DigitalId {
         return new DigitalId(id, name, dob, IdentityStatus.ACTIVE, now, now);
     }
 
+    public DigitalIdNumber id() {
+        return id;
+    }
+
     public IdentityStatus status() {
         return status;
     }
