@@ -11,6 +11,8 @@ import uk.ac.qmul.digitalid.domain.DigitalId;
 import uk.ac.qmul.digitalid.domain.DigitalIdNumber;
 import uk.ac.qmul.digitalid.domain.IdentityStatus;
 import uk.ac.qmul.digitalid.domain.LegalName;
+import uk.ac.qmul.digitalid.domain.Restriction;
+import uk.ac.qmul.digitalid.domain.RestrictionType;
 
 import java.lang.reflect.Field;
 import java.time.Clock;
@@ -131,7 +133,21 @@ class BankPortalTest {
         assertThat(response.getReasonCodes()).contains("NOT_FOUND");
     }
 
+    @Test
+    void shouldFailKyc_whenActiveFinancialReviewRestrictionExists() {
+        repository.save(activeIdentityWithFinancialReview());
+        BankKycRequest request = new BankKycRequest(ID, STORED_NAME, STORED_DOB);
+
+        BankKycResponse response = portal.checkBasicKyc(request);
+
+        assertThat(response.isValidNow()).isTrue();
+        assertThat(response.getKycDecision()).isEqualTo(KycDecision.FAIL);
+        assertThat(response.getReasonCodes()).contains("FINANCIAL_REVIEW_ACTIVE");
+    }
+
     // helpers
+
+    private static final LocalDate CHECK_DATE = LocalDate.ofInstant(NOW, java.time.ZoneOffset.UTC);
 
     private DigitalId activeIdentity() {
         return DigitalId.create(ID, STORED_NAME, STORED_DOB, NOW);
@@ -139,5 +155,15 @@ class BankPortalTest {
 
     private DigitalId identity(IdentityStatus targetStatus) {
         return activeIdentity().changeStatus(targetStatus, NOW).getPayload();
+    }
+
+    private DigitalId activeIdentityWithFinancialReview() {
+        DigitalId base = activeIdentity();
+        Restriction activeReview = new Restriction(
+                RestrictionType.FINANCIAL_REVIEW,
+                CHECK_DATE.minusDays(30),
+                null,
+                "UNDER_REVIEW");
+        return base.addRestriction(activeReview, CHECK_DATE).getPayload();
     }
 }
