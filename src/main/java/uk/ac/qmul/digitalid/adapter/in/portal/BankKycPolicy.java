@@ -18,6 +18,7 @@ public final class BankKycPolicy implements VerificationPolicy {
     private final LegalName submittedName;
     private final LocalDate submittedDateOfBirth;
 
+    private boolean statusValid;
     private boolean nameMatched;
     private boolean dobMatched;
 
@@ -28,15 +29,16 @@ public final class BankKycPolicy implements VerificationPolicy {
 
     @Override
     public VerificationDecision evaluate(DigitalId identity) {
+        statusValid = identity.getStatus() == IdentityStatus.ACTIVE;
         nameMatched = identity.getCurrentLegalName().equals(submittedName);
         dobMatched  = identity.getDateOfBirth().equals(submittedDateOfBirth);
-        boolean statusValid = identity.getStatus() == IdentityStatus.ACTIVE;
 
         return (statusValid && nameMatched && dobMatched)
                 ? VerificationDecision.VERIFIED
                 : VerificationDecision.REJECTED;
     }
 
+    public boolean isStatusValid() { return statusValid; }
     public boolean isNameMatched() { return nameMatched; }
     public boolean isDobMatched()  { return dobMatched; }
 }

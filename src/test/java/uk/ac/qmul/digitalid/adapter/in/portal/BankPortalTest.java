@@ -117,7 +117,7 @@ class BankPortalTest {
 
         assertThat(response.isValidNow()).isFalse();
         assertThat(response.getKycDecision()).isEqualTo(KycDecision.FAIL);
-        assertThat(response.getReasonCodes()).contains("SUSPENDED");
+        assertThat(response.getReasonCodes()).contains("INVALID_STATUS");
     }
 
     @Test
