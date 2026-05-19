@@ -36,4 +36,16 @@ public final class DigitalId {
     public DigitalId changeDateOfBirth(LocalDate newDob) {
         throw new UnsupportedOperationException("Date of birth is immutable");
     }
+
+    public DigitalId updateLegalName(LegalName newName, Instant updatedAt) {
+        return new DigitalId(this.id, newName, this.dateOfBirth, this.status, this.createdAt, updatedAt);
+    }
+
+    public LegalName currentLegalName() {
+        return currentLegalName;
+    }
+
+    public Instant updatedAt() {
+        return updatedAt;
+    }
 }
