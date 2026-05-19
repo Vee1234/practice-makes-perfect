@@ -6,22 +6,17 @@ import uk.ac.qmul.digitalid.domain.Restriction;
 
 import java.util.Objects;
 
-public final class AddRestrictionCommand {
+public final class AddRestrictionCommand extends ManagementCommand {
 
-    private final DigitalIdNumber digitalIdNumber;
     private final Restriction restriction;
-    private final Organisation requestedBy;
 
     public AddRestrictionCommand(DigitalIdNumber digitalIdNumber, Restriction restriction, Organisation requestedBy) {
-        Objects.requireNonNull(digitalIdNumber, "digitalIdNumber is required");
-        Objects.requireNonNull(restriction, "restriction is required");
-        Objects.requireNonNull(requestedBy, "requestedBy is required");
-        this.digitalIdNumber = digitalIdNumber;
-        this.restriction = restriction;
-        this.requestedBy = requestedBy;
+        super(digitalIdNumber, requestedBy);
+        this.restriction = Objects.requireNonNull(restriction, "restriction is required");
     }
 
-    public DigitalIdNumber digitalIdNumber() { return digitalIdNumber; }
-    public Restriction restriction()         { return restriction; }
-    public Organisation requestedBy()        { return requestedBy; }
+    public Restriction getRestriction() { return restriction; }
+
+    @Override
+    public String getEventType() { return "ADD_RESTRICTION"; }
 }

@@ -8,8 +8,8 @@ class OperationResultTest {
     void successBehavesPredictably() {
         OperationResult<String> result = OperationResult.success("ok");
         assertTrue(result.isSuccess());
-        assertEquals("ok", result.payload());
-        assertNull(result.error());
+        assertEquals("ok", result.getPayload());
+        assertNull(result.getError());
     }
 
     @Test
@@ -17,8 +17,8 @@ class OperationResultTest {
         DomainError error = new DomainError(ErrorCode.INVALID_ID, "bad id");
         OperationResult<String> result = OperationResult.failure(error);
         assertFalse(result.isSuccess());
-        assertNull(result.payload());
-        assertEquals(error, result.error());
+        assertNull(result.getPayload());
+        assertEquals(error, result.getError());
     }
 }
 

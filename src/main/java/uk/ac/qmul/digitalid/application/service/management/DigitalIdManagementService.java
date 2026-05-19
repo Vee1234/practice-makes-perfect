@@ -29,50 +29,50 @@ public final class DigitalIdManagementService implements CreateIdentityPort, Upd
 
     @Override
     public OperationResult<DigitalId> createIdentity(IdentityCreateCommand command) {
-        Optional<DomainError> auth = authorisationService.authoriseManagement(command.requestedBy());
+        Optional<DomainError> auth = authorisationService.authoriseManagement(command.getRequestedBy());
         if (auth.isPresent()) {
-            audit("CREATE_IDENTITY", command.requestedBy().organisationId(), false, auth.get().code().name());
+            audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), false, auth.get().code().name());
             return OperationResult.failure(auth.get());
         }
 
-        if (repository.exists(command.digitalIdNumber())) {
+        if (repository.exists(command.getDigitalIdNumber())) {
             DomainError error = new DomainError(ErrorCode.DUPLICATE_ID, "Identity already exists");
-            audit("CREATE_IDENTITY", command.requestedBy().organisationId(), false, error.code().name());
+            audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), false, error.code().name());
             return OperationResult.failure(error);
         }
 
-        DigitalId digitalId = DigitalId.create(command.digitalIdNumber(), command.legalName(),
-                command.dateOfBirth(), clock.instant());
+        DigitalId digitalId = DigitalId.create(command.getDigitalIdNumber(), command.getLegalName(),
+                command.getDateOfBirth(), clock.instant());
         repository.save(digitalId);
-        audit("CREATE_IDENTITY", command.requestedBy().organisationId(), true, null);
+        audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), true, null);
 
         return OperationResult.success(digitalId);
     }
 
     @Override
     public OperationResult<DigitalId> updateMutableAttributes(IdentityUpdateCommand command) {
-        Optional<DomainError> auth = authorisationService.authoriseManagement(command.requestedBy());
+        Optional<DomainError> auth = authorisationService.authoriseManagement(command.getRequestedBy());
         if (auth.isPresent()) {
-            audit("UPDATE_IDENTITY", command.requestedBy().organisationId(), false, auth.get().code().name());
+            audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), false, auth.get().code().name());
             return OperationResult.failure(auth.get());
         }
 
-        DigitalId existing = repository.findById(command.digitalIdNumber()).orElse(null);
+        DigitalId existing = repository.findById(command.getDigitalIdNumber()).orElse(null);
         if (existing == null) {
             DomainError error = new DomainError(ErrorCode.NOT_FOUND, "Identity not found");
-            audit("UPDATE_IDENTITY", command.requestedBy().organisationId(), false, error.code().name());
+            audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), false, error.code().name());
             return OperationResult.failure(error);
         }
 
-        if (existing.status() == IdentityStatus.REVOKED || existing.status() == IdentityStatus.EXPIRED) {
+        if (existing.getStatus() == IdentityStatus.REVOKED || existing.getStatus() == IdentityStatus.EXPIRED) {
             DomainError error = new DomainError(ErrorCode.NOT_MODIFIABLE, "Identity is in a terminal state and cannot be modified");
-            audit("UPDATE_IDENTITY", command.requestedBy().organisationId(), false, error.code().name());
+            audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), false, error.code().name());
             return OperationResult.failure(error);
         }
 
-        DigitalId updated = existing.updateLegalName(command.newLegalName(), clock.instant());
+        DigitalId updated = existing.updateLegalName(command.getNewLegalName(), clock.instant());
         repository.save(updated);
-        audit("UPDATE_IDENTITY", command.requestedBy().organisationId(), true, null);
+        audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), true, null);
 
         return OperationResult.success(updated);
     }

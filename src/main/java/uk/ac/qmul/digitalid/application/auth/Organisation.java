@@ -14,6 +14,6 @@ public final class Organisation {
         this.role = role;
     }
 
-    public String organisationId() { return organisationId; }
-    public OrganisationRole role() { return role; }
+    public String getOrganisationId() { return organisationId; }
+    public OrganisationRole getRole() { return role; }
 }

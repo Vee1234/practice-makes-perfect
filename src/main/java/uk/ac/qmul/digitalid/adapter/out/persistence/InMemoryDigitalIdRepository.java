@@ -14,7 +14,7 @@ public final class InMemoryDigitalIdRepository implements DigitalIdRepository {
 
     @Override
     public void save(DigitalId digitalId) {
-        store.put(digitalId.id(), digitalId);
+        store.put(digitalId.getId(), digitalId);
     }
 
     @Override

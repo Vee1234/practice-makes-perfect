@@ -33,7 +33,7 @@ class InMemoryDigitalIdRepositoryTest {
         Optional<DigitalId> result = repository.findById(ID);
 
         assertThat(result).isPresent();
-        assertThat(result.get().id()).isEqualTo(ID);
+        assertThat(result.get().getId()).isEqualTo(ID);
     }
 
     @Test

@@ -23,11 +23,11 @@ public final class OperationResult<T> {
         return error == null;
     }
 
-    public T payload() {
+    public T getPayload() {
         return payload;
     }
 
-    public DomainError error() {
+    public DomainError getError() {
         return error;
     }
 }

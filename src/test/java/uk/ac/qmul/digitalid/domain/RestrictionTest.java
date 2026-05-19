@@ -16,17 +16,17 @@ class RestrictionTest {
     void shouldCreateRestriction_whenDateRangeIsValid() {
         Restriction restriction = new Restriction(RestrictionType.DRIVING_BAN, START, END, "BANNED");
 
-        assertThat(restriction.type()).isEqualTo(RestrictionType.DRIVING_BAN);
-        assertThat(restriction.startsOn()).isEqualTo(START);
-        assertThat(restriction.endsOn()).isEqualTo(END);
-        assertThat(restriction.reasonCode()).isEqualTo("BANNED");
+        assertThat(restriction.getType()).isEqualTo(RestrictionType.DRIVING_BAN);
+        assertThat(restriction.getStartsOn()).isEqualTo(START);
+        assertThat(restriction.getEndsOn()).isEqualTo(END);
+        assertThat(restriction.getReasonCode()).isEqualTo("BANNED");
     }
 
     @Test
     void shouldCreateRestriction_whenEndsOnIsAbsent() {
         Restriction restriction = new Restriction(RestrictionType.BORDER_HOLD, START, null, "HOLD");
 
-        assertThat(restriction.endsOn()).isNull();
+        assertThat(restriction.getEndsOn()).isNull();
     }
 
     @Test

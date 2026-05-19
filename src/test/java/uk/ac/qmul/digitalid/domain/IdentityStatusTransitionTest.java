@@ -25,17 +25,17 @@ class IdentityStatusTransitionTest {
         OperationResult<DigitalId> result = activeId().changeStatus(IdentityStatus.SUSPENDED, LATER);
 
         assertThat(result.isSuccess()).isTrue();
-        assertThat(result.payload().status()).isEqualTo(IdentityStatus.SUSPENDED);
+        assertThat(result.getPayload().getStatus()).isEqualTo(IdentityStatus.SUSPENDED);
     }
 
     @Test
     void shouldAllowTransition_whenSuspendedToActive() {
-        DigitalId suspended = activeId().changeStatus(IdentityStatus.SUSPENDED, LATER).payload();
+        DigitalId suspended = activeId().changeStatus(IdentityStatus.SUSPENDED, LATER).getPayload();
 
         OperationResult<DigitalId> result = suspended.changeStatus(IdentityStatus.ACTIVE, LATER);
 
         assertThat(result.isSuccess()).isTrue();
-        assertThat(result.payload().status()).isEqualTo(IdentityStatus.ACTIVE);
+        assertThat(result.getPayload().getStatus()).isEqualTo(IdentityStatus.ACTIVE);
     }
 
     @Test
@@ -43,7 +43,7 @@ class IdentityStatusTransitionTest {
         OperationResult<DigitalId> result = activeId().changeStatus(IdentityStatus.REVOKED, LATER);
 
         assertThat(result.isSuccess()).isTrue();
-        assertThat(result.payload().status()).isEqualTo(IdentityStatus.REVOKED);
+        assertThat(result.getPayload().getStatus()).isEqualTo(IdentityStatus.REVOKED);
     }
 
     @Test
@@ -51,49 +51,49 @@ class IdentityStatusTransitionTest {
         OperationResult<DigitalId> result = activeId().changeStatus(IdentityStatus.EXPIRED, LATER);
 
         assertThat(result.isSuccess()).isTrue();
-        assertThat(result.payload().status()).isEqualTo(IdentityStatus.EXPIRED);
+        assertThat(result.getPayload().getStatus()).isEqualTo(IdentityStatus.EXPIRED);
     }
 
     @Test
     void shouldRejectTransition_whenRevokedToActive() {
-        DigitalId revoked = activeId().changeStatus(IdentityStatus.REVOKED, LATER).payload();
+        DigitalId revoked = activeId().changeStatus(IdentityStatus.REVOKED, LATER).getPayload();
 
         OperationResult<DigitalId> result = revoked.changeStatus(IdentityStatus.ACTIVE, LATER);
 
         assertThat(result.isSuccess()).isFalse();
-        assertThat(result.error().code()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
+        assertThat(result.getError().code()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
     }
 
     @Test
     void shouldRejectTransition_whenExpiredToSuspended() {
-        DigitalId expired = activeId().changeStatus(IdentityStatus.EXPIRED, LATER).payload();
+        DigitalId expired = activeId().changeStatus(IdentityStatus.EXPIRED, LATER).getPayload();
 
         OperationResult<DigitalId> result = expired.changeStatus(IdentityStatus.SUSPENDED, LATER);
 
         assertThat(result.isSuccess()).isFalse();
-        assertThat(result.error().code()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
+        assertThat(result.getError().code()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
     }
 
     @Test
     void shouldRejectTransition_whenRevokedToRevokedRepeatedly() {
-        DigitalId revoked = activeId().changeStatus(IdentityStatus.REVOKED, LATER).payload();
+        DigitalId revoked = activeId().changeStatus(IdentityStatus.REVOKED, LATER).getPayload();
 
         OperationResult<DigitalId> first = revoked.changeStatus(IdentityStatus.REVOKED, LATER);
         OperationResult<DigitalId> second = revoked.changeStatus(IdentityStatus.REVOKED, LATER);
 
         assertThat(first.isSuccess()).isFalse();
-        assertThat(first.error().code()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
+        assertThat(first.getError().code()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
         assertThat(second.isSuccess()).isFalse();
-        assertThat(second.error().code()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
+        assertThat(second.getError().code()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
     }
 
     @Test
     void shouldRejectTransition_whenExpiredToExpiredRepeatedly() {
-        DigitalId expired = activeId().changeStatus(IdentityStatus.EXPIRED, LATER).payload();
+        DigitalId expired = activeId().changeStatus(IdentityStatus.EXPIRED, LATER).getPayload();
 
         OperationResult<DigitalId> result = expired.changeStatus(IdentityStatus.EXPIRED, LATER);
 
         assertThat(result.isSuccess()).isFalse();
-        assertThat(result.error().code()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
+        assertThat(result.getError().code()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
     }
 }

@@ -8,7 +8,7 @@ import java.util.Optional;
 public final class AuthorisationService {
 
     public Optional<DomainError> authoriseManagement(Organisation organisation) {
-        if (organisation.role() == OrganisationRole.CENTRAL_AUTHORITY) {
+        if (organisation.getRole() == OrganisationRole.CENTRAL_AUTHORITY) {
             return Optional.empty();
         }
         return Optional.of(new DomainError(ErrorCode.UNAUTHORISED_OPERATION, "Unauthorised operation"));
