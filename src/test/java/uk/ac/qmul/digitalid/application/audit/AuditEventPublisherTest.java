@@ -28,7 +28,7 @@ class AuditEventPublisherTest {
 
         publisher.notifyObservers(event);
 
-        assertThat(sink.events()).containsExactly(event);
+        assertThat(sink.findAll()).containsExactly(event);
     }
 
     @Test
@@ -40,8 +40,8 @@ class AuditEventPublisherTest {
 
         publisher.notifyObservers(event);
 
-        assertThat(sink.events()).containsExactly(event);
-        assertThat(secondSink.events()).containsExactly(event);
+        assertThat(sink.findAll()).containsExactly(event);
+        assertThat(secondSink.findAll()).containsExactly(event);
     }
 
     @Test
@@ -52,7 +52,7 @@ class AuditEventPublisherTest {
 
         publisher.notifyObservers(event);
 
-        assertThat(sink.events()).isEmpty();
+        assertThat(sink.findAll()).isEmpty();
     }
 
     @Test
@@ -61,6 +61,6 @@ class AuditEventPublisherTest {
 
         publisher.notifyObservers(event);
 
-        assertThat(sink.events()).isEmpty();
+        assertThat(sink.findAll()).isEmpty();
     }
 }

@@ -13,4 +13,11 @@ public final class AuthorisationService {
         }
         return Optional.of(new DomainError(ErrorCode.UNAUTHORISED_OPERATION, "Unauthorised operation"));
     }
+
+    public Optional<DomainError> authoriseAuditQuery(Organisation organisation) {
+        if (organisation.getRole() == OrganisationRole.AUDITOR) {
+            return Optional.empty();
+        }
+        return Optional.of(new DomainError(ErrorCode.UNAUTHORISED_OPERATION, "Unauthorised operation"));
+    }
 }

@@ -110,16 +110,16 @@ class DigitalIdManagementServiceStatusRestrictionTest {
     void shouldAuditSuccess_whenStatusChanged() {
         service.changeStatus(new ChangeStatusCommand(ID, IdentityStatus.SUSPENDED, CENTRAL));
 
-        assertThat(auditSink.events()).hasSize(1);
-        assertThat(auditSink.events().get(0).isSuccess()).isTrue();
+        assertThat(auditSink.findAll()).hasSize(1);
+        assertThat(auditSink.findAll().get(0).isSuccess()).isTrue();
     }
 
     @Test
     void shouldAuditFailure_whenStatusChangeUnauthorised() {
         service.changeStatus(new ChangeStatusCommand(ID, IdentityStatus.SUSPENDED, EMPLOYER));
 
-        assertThat(auditSink.events()).hasSize(1);
-        assertThat(auditSink.events().get(0).isSuccess()).isFalse();
+        assertThat(auditSink.findAll()).hasSize(1);
+        assertThat(auditSink.findAll().get(0).isSuccess()).isFalse();
     }
 
     // --- addRestriction ---
@@ -181,7 +181,7 @@ class DigitalIdManagementServiceStatusRestrictionTest {
                 LocalDate.of(2026, 1, 1), null, "COURT_ORDER");
         service.addRestriction(new AddRestrictionCommand(ID, restriction, CENTRAL));
 
-        assertThat(auditSink.events()).hasSize(1);
-        assertThat(auditSink.events().get(0).isSuccess()).isTrue();
+        assertThat(auditSink.findAll()).hasSize(1);
+        assertThat(auditSink.findAll().get(0).isSuccess()).isTrue();
     }
 }

@@ -22,7 +22,7 @@ class InMemoryAuditSinkTest {
 
     @Test
     void shouldReturnEmptyList_whenNoEventsRecorded() {
-        assertThat(auditSink.events()).isEmpty();
+        assertThat(auditSink.findAll()).isEmpty();
     }
 
     @Test
@@ -31,7 +31,7 @@ class InMemoryAuditSinkTest {
 
         auditSink.record(event);
 
-        assertThat(auditSink.events()).containsExactly(event);
+        assertThat(auditSink.findAll()).containsExactly(event);
     }
 
     @Test
@@ -42,7 +42,7 @@ class InMemoryAuditSinkTest {
         auditSink.record(first);
         auditSink.record(second);
 
-        List<AuditEvent> events = auditSink.events();
+        List<AuditEvent> events = auditSink.findAll();
         assertThat(events).hasSize(2);
         assertThat(events.get(0)).isEqualTo(first);
         assertThat(events.get(1)).isEqualTo(second);
