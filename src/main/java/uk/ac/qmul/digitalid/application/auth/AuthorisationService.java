@@ -12,6 +12,6 @@ public final class AuthorisationService {
         }
         return OperationResult.failure(new DomainError(
                 ErrorCode.UNAUTHORISED_OPERATION,
-                "Only CENTRAL_AUTHORITY may perform management operations"));
+                "Unauthorised operation."));
     }
 }
