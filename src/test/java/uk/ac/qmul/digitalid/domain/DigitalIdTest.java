@@ -29,7 +29,7 @@ class DigitalIdTest {
     }
 
     @Test
-    void updateLegalNameCreatesNewInstance() {
+    void legalNameUpdateChangesUpdatedAt() {
         DigitalIdNumber id = DigitalIdNumber.of("DID-000003");
         LegalName name = new LegalName("Carol Example");
         LocalDate dob = LocalDate.of(1985, 3, 3);
@@ -39,5 +39,11 @@ class DigitalIdTest {
         digitalId = digitalId.updateLegalName(new LegalName("Carol Smith"), updated);
         assertEquals("Carol Smith", digitalId.currentLegalName().value());
         assertEquals(updated, digitalId.updatedAt());
+    }
+
+    @Test
+    void invalidLegalNameRejected() {
+        assertThrows(IllegalArgumentException.class, () -> new LegalName(""));
+        assertThrows(IllegalArgumentException.class, () -> new LegalName("   "));
     }
 }
