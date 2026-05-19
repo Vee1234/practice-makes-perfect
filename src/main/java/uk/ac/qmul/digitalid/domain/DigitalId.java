@@ -77,6 +77,10 @@ public final class DigitalId {
         return currentLegalName;
     }
 
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
     public Instant getUpdatedAt() {
         return updatedAt;
     }
