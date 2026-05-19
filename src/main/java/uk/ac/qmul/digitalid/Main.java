@@ -12,18 +12,23 @@ import uk.ac.qmul.digitalid.application.auth.OrganisationRole;
 import uk.ac.qmul.digitalid.application.port.in.AddRestrictionPort;
 import uk.ac.qmul.digitalid.application.port.in.ChangeStatusPort;
 import uk.ac.qmul.digitalid.application.port.in.CreateIdentityPort;
+import uk.ac.qmul.digitalid.application.port.in.FindIdentityPort;
+import uk.ac.qmul.digitalid.application.port.in.SetWelfareBandPort;
 import uk.ac.qmul.digitalid.application.service.audit.AuditQueryService;
 import uk.ac.qmul.digitalid.application.service.consumption.DigitalIdConsumptionService;
 import uk.ac.qmul.digitalid.application.service.management.AddRestrictionCommand;
 import uk.ac.qmul.digitalid.application.service.management.ChangeStatusCommand;
 import uk.ac.qmul.digitalid.application.service.management.DigitalIdManagementService;
 import uk.ac.qmul.digitalid.application.service.management.IdentityCreateCommand;
+import uk.ac.qmul.digitalid.application.service.management.SetWelfareBandCommand;
+import uk.ac.qmul.digitalid.domain.DigitalId;
 import uk.ac.qmul.digitalid.domain.DigitalIdNumber;
 import uk.ac.qmul.digitalid.domain.IdentityStatus;
 import uk.ac.qmul.digitalid.domain.LegalName;
 import uk.ac.qmul.digitalid.domain.OperationResult;
 import uk.ac.qmul.digitalid.domain.Restriction;
 import uk.ac.qmul.digitalid.domain.RestrictionType;
+import uk.ac.qmul.digitalid.domain.WelfareBand;
 
 import java.io.PrintStream;
 import java.time.Clock;
@@ -70,7 +75,9 @@ public class Main {
                         suspendIdentityCommand(managementService),
                         activateIdentityCommand(managementService),
                         revokeIdentityCommand(managementService),
-                        addRestrictionCommand(managementService)
+                        addRestrictionCommand(managementService),
+                        setWelfareBandCommand(managementService),
+                        viewIdentityCommand(managementService)
                 ),
                 "EMPLOYER", List.of(
                         employerVerifyCommand(employerPortal)
@@ -220,6 +227,69 @@ public class Main {
 
                 if (result.isSuccess()) out.println("Restriction added to: " + id.get().value());
                 else                   out.println("Failed: " + result.getError().message());
+            }
+        };
+    }
+
+    private static ConsoleCommand setWelfareBandCommand(SetWelfareBandPort port) {
+        return new ConsoleCommand() {
+            public String getDescription() { return "Set / update welfare band for a Digital ID"; }
+
+            public void execute(Scanner in, PrintStream out) {
+                Optional<DigitalIdNumber> id = readField(in, out, "Digital ID number", DigitalIdNumber::of);
+                if (id.isEmpty()) return;
+
+                WelfareBand[] bands = WelfareBand.values();
+                out.println("Welfare band:");
+                for (int i = 0; i < bands.length; i++) {
+                    out.printf("  %d. %s%n", i + 1, bands[i]);
+                }
+                Optional<WelfareBand> band = readField(in, out, "Select band", raw -> {
+                    int index = Integer.parseInt(raw) - 1;
+                    if (index < 0 || index >= bands.length) throw new IllegalArgumentException("Invalid selection");
+                    return bands[index];
+                });
+                if (band.isEmpty()) return;
+
+                OperationResult<?> result = port.setWelfareBand(
+                        new SetWelfareBandCommand(id.get(), band.get(), CENTRAL_AUTHORITY));
+
+                if (result.isSuccess()) out.println("Welfare band set to " + band.get() + " for: " + id.get().value());
+                else                   out.println("Failed: " + result.getError().message());
+            }
+        };
+    }
+
+    private static ConsoleCommand viewIdentityCommand(FindIdentityPort port) {
+        return new ConsoleCommand() {
+            public String getDescription() { return "View all information for a Digital ID"; }
+
+            public void execute(Scanner in, PrintStream out) {
+                Optional<DigitalIdNumber> id = readField(in, out, "Digital ID number", DigitalIdNumber::of);
+                if (id.isEmpty()) return;
+
+                OperationResult<DigitalId> result = port.findById(CENTRAL_AUTHORITY, id.get());
+                if (!result.isSuccess()) { out.println("Identity not found."); return; }
+
+                DigitalId identity = result.getPayload();
+                out.println("ID:                 " + identity.getId().value());
+                out.println("Name:               " + identity.getCurrentLegalName().value());
+                out.println("Date of birth:      " + identity.getDateOfBirth());
+                out.println("Status:             " + identity.getStatus());
+                out.println("Residential region: " + identity.getResidentialRegion());
+                out.println("Welfare band:       " + identity.getWelfareBand());
+                out.println("Created at:         " + identity.getCreatedAt());
+                out.println("Updated at:         " + identity.getUpdatedAt());
+                if (identity.getRestrictions().isEmpty()) {
+                    out.println("Restrictions:       none");
+                } else {
+                    out.println("Restrictions:");
+                    identity.getRestrictions().forEach(r ->
+                            out.printf("  - %-20s from %s to %s (%s)%n",
+                                    r.getType(), r.getStartsOn(),
+                                    r.getEndsOn() != null ? r.getEndsOn() : "indefinite",
+                                    r.getReasonCode()));
+                }
             }
         };
     }

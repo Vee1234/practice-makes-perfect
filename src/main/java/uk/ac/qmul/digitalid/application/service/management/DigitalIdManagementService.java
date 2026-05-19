@@ -3,9 +3,12 @@ package uk.ac.qmul.digitalid.application.service.management;
 import uk.ac.qmul.digitalid.application.audit.AuditEvent;
 import uk.ac.qmul.digitalid.application.audit.AuditEventPublisher;
 import uk.ac.qmul.digitalid.application.auth.AuthorisationService;
+import uk.ac.qmul.digitalid.application.auth.Organisation;
 import uk.ac.qmul.digitalid.application.port.in.AddRestrictionPort;
 import uk.ac.qmul.digitalid.application.port.in.ChangeStatusPort;
 import uk.ac.qmul.digitalid.application.port.in.CreateIdentityPort;
+import uk.ac.qmul.digitalid.application.port.in.FindIdentityPort;
+import uk.ac.qmul.digitalid.application.port.in.SetWelfareBandPort;
 import uk.ac.qmul.digitalid.application.port.in.UpdateIdentityPort;
 import uk.ac.qmul.digitalid.application.port.out.DigitalIdRepository;
 import uk.ac.qmul.digitalid.domain.*;
@@ -15,7 +18,7 @@ import java.time.LocalDate;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class DigitalIdManagementService implements CreateIdentityPort, UpdateIdentityPort, ChangeStatusPort, AddRestrictionPort {
+public final class DigitalIdManagementService implements CreateIdentityPort, UpdateIdentityPort, ChangeStatusPort, AddRestrictionPort, SetWelfareBandPort, FindIdentityPort {
 
     private final DigitalIdRepository repository;
     private final AuditEventPublisher auditPublisher;
@@ -130,6 +133,40 @@ public final class DigitalIdManagementService implements CreateIdentityPort, Upd
         repository.save(result.getPayload());
         audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), true, null);
         return result;
+    }
+
+    @Override
+    public OperationResult<DigitalId> setWelfareBand(SetWelfareBandCommand command) {
+        Optional<DomainError> auth = authorisationService.authoriseManagement(command.getRequestedBy());
+        if (auth.isPresent()) {
+            audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), false, auth.get().code().name());
+            return OperationResult.failure(auth.get());
+        }
+
+        DigitalId existing = repository.findById(command.getDigitalIdNumber()).orElse(null);
+        if (existing == null) {
+            DomainError error = new DomainError(ErrorCode.NOT_FOUND, "Identity not found");
+            audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), false, error.code().name());
+            return OperationResult.failure(error);
+        }
+
+        DigitalId updated = existing.withWelfareBand(command.getWelfareBand());
+        repository.save(updated);
+        audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), true, null);
+        return OperationResult.success(updated);
+    }
+
+    @Override
+    public OperationResult<DigitalId> findById(Organisation requestedBy, DigitalIdNumber id) {
+        Optional<DomainError> auth = authorisationService.authoriseManagement(requestedBy);
+        if (auth.isPresent()) {
+            return OperationResult.failure(auth.get());
+        }
+
+        return repository.findById(id)
+                .map(OperationResult::success)
+                .orElseGet(() -> OperationResult.failure(
+                        new DomainError(ErrorCode.NOT_FOUND, "Identity not found")));
     }
 
     private void audit(String eventType, String actor, boolean success, String reasonCode) {
