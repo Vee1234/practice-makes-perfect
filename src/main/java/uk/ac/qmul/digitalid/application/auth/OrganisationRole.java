@@ -1,6 +1,6 @@
 package uk.ac.qmul.digitalid.application.auth;
 
-public enum ActorRole {
+public enum OrganisationRole {
     CENTRAL_AUTHORITY,
     EMPLOYER,
     BANK,

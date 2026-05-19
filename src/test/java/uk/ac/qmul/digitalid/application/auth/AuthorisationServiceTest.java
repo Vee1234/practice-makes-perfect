@@ -17,39 +17,39 @@ class AuthorisationServiceTest {
     }
 
     @Test
-    void shouldAuthorise_whenActorIsCentralAuthority() {
-        ActorContext actor = new ActorContext("CA-001", ActorRole.CENTRAL_AUTHORITY);
+    void shouldAuthorise_whenOrganisationIsCentralAuthority() {
+        Organisation organisation = new Organisation("CA-001", OrganisationRole.CENTRAL_AUTHORITY);
 
-        OperationResult<Void> result = authorisationService.authoriseManagement(actor);
+        OperationResult<Void> result = authorisationService.authoriseManagement(organisation);
 
         assertThat(result.isSuccess()).isTrue();
     }
 
     @Test
-    void shouldReject_whenActorIsEmployer() {
-        ActorContext actor = new ActorContext("EMP-001", ActorRole.EMPLOYER);
+    void shouldReject_whenOrganisationIsEmployer() {
+        Organisation organisation = new Organisation("EMP-001", OrganisationRole.EMPLOYER);
 
-        OperationResult<Void> result = authorisationService.authoriseManagement(actor);
-
-        assertThat(result.isSuccess()).isFalse();
-        assertThat(result.error().code()).isEqualTo(ErrorCode.UNAUTHORISED_OPERATION);
-    }
-
-    @Test
-    void shouldReject_whenActorIsBank() {
-        ActorContext actor = new ActorContext("BANK-001", ActorRole.BANK);
-
-        OperationResult<Void> result = authorisationService.authoriseManagement(actor);
+        OperationResult<Void> result = authorisationService.authoriseManagement(organisation);
 
         assertThat(result.isSuccess()).isFalse();
         assertThat(result.error().code()).isEqualTo(ErrorCode.UNAUTHORISED_OPERATION);
     }
 
     @Test
-    void shouldReject_whenActorIsAuditor() {
-        ActorContext actor = new ActorContext("AUD-001", ActorRole.AUDITOR);
+    void shouldReject_whenOrganisationIsBank() {
+        Organisation organisation = new Organisation("BANK-001", OrganisationRole.BANK);
 
-        OperationResult<Void> result = authorisationService.authoriseManagement(actor);
+        OperationResult<Void> result = authorisationService.authoriseManagement(organisation);
+
+        assertThat(result.isSuccess()).isFalse();
+        assertThat(result.error().code()).isEqualTo(ErrorCode.UNAUTHORISED_OPERATION);
+    }
+
+    @Test
+    void shouldReject_whenOrganisationIsAuditor() {
+        Organisation organisation = new Organisation("AUD-001", OrganisationRole.AUDITOR);
+
+        OperationResult<Void> result = authorisationService.authoriseManagement(organisation);
 
         assertThat(result.isSuccess()).isFalse();
         assertThat(result.error().code()).isEqualTo(ErrorCode.UNAUTHORISED_OPERATION);
