@@ -276,7 +276,6 @@ public class Main {
                 out.println("Name:               " + identity.getCurrentLegalName().value());
                 out.println("Date of birth:      " + identity.getDateOfBirth());
                 out.println("Status:             " + identity.getStatus());
-                out.println("Residential region: " + identity.getResidentialRegion());
                 out.println("Welfare band:       " + identity.getWelfareBand());
                 out.println("Created at:         " + identity.getCreatedAt());
                 out.println("Updated at:         " + identity.getUpdatedAt());
@@ -359,7 +358,6 @@ public class Main {
                 WelfareEligibilityResponse response = portal.checkBenefitEligibility(id.get());
                 if (response.getReasonCodes().contains("NOT_FOUND")) { out.println("Identity not found."); return; }
                 out.println("Eligible:       " + response.isEligible());
-                out.println("Region matched: " + response.isRegionMatched());
                 out.println("Band category:  " + response.getBandCategory());
                 out.println("Reason codes:   " + response.getReasonCodes());
             }

@@ -8,15 +8,13 @@ final class WelfareEligibilityResponseProjector {
 
     WelfareEligibilityResponse project(VerificationDecision decision, List<String> failingReasonCodes) {
         if (decision == VerificationDecision.NOT_FOUND) {
-            return new WelfareEligibilityResponse(false, false, BandCategory.UNKNOWN, List.of("NOT_FOUND"));
+            return new WelfareEligibilityResponse(false, BandCategory.UNKNOWN, List.of("NOT_FOUND"));
         }
 
-        boolean eligible      = failingReasonCodes.isEmpty();
-        boolean regionMatched = !failingReasonCodes.contains("REGION_MISMATCH")
-                             && !failingReasonCodes.contains("REGION_NOT_SET");
+        boolean eligible = failingReasonCodes.isEmpty();
         BandCategory bandCategory = deriveBandCategory(failingReasonCodes);
 
-        return new WelfareEligibilityResponse(eligible, regionMatched, bandCategory, failingReasonCodes);
+        return new WelfareEligibilityResponse(eligible, bandCategory, failingReasonCodes);
     }
 
     private BandCategory deriveBandCategory(List<String> failingReasonCodes) {

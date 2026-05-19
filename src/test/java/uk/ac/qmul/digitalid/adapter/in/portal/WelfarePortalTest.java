@@ -56,7 +56,7 @@ class WelfarePortalTest {
                 .collect(Collectors.toSet());
 
         assertThat(fieldNames).containsExactlyInAnyOrder(
-                "eligible", "regionMatched", "bandCategory", "reasonCodes");
+                "eligible", "bandCategory", "reasonCodes");
     }
 
     @Test

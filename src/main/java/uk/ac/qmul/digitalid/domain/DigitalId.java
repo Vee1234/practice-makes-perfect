@@ -16,43 +16,33 @@ public final class DigitalId {
     private final Instant createdAt;
     private final Instant updatedAt;
     private final Set<Restriction> restrictions;
-    private final String residentialRegion;
     private final WelfareBand welfareBand;
 
     private DigitalId(DigitalIdNumber id, LegalName name, LocalDate dob, IdentityStatus status,
                       Instant createdAt, Instant updatedAt, Set<Restriction> restrictions,
-                      String residentialRegion, WelfareBand welfareBand) {
-        this.id                = Objects.requireNonNull(id);
-        this.currentLegalName  = Objects.requireNonNull(name);
-        this.dateOfBirth       = Objects.requireNonNull(dob);
-        this.status            = Objects.requireNonNull(status);
-        this.createdAt         = Objects.requireNonNull(createdAt);
-        this.updatedAt         = Objects.requireNonNull(updatedAt);
-        this.restrictions      = Collections.unmodifiableSet(new HashSet<>(Objects.requireNonNull(restrictions)));
-        this.residentialRegion = residentialRegion;
-        this.welfareBand       = welfareBand;
+                      WelfareBand welfareBand) {
+        this.id               = Objects.requireNonNull(id);
+        this.currentLegalName = Objects.requireNonNull(name);
+        this.dateOfBirth      = Objects.requireNonNull(dob);
+        this.status           = Objects.requireNonNull(status);
+        this.createdAt        = Objects.requireNonNull(createdAt);
+        this.updatedAt        = Objects.requireNonNull(updatedAt);
+        this.restrictions     = Collections.unmodifiableSet(new HashSet<>(Objects.requireNonNull(restrictions)));
+        this.welfareBand      = welfareBand;
     }
 
     public static DigitalId create(DigitalIdNumber id, LegalName name, LocalDate dob, Instant now) {
-        return new DigitalId(id, name, dob, IdentityStatus.ACTIVE, now, now, Set.of(), null, null);
+        return new DigitalId(id, name, dob, IdentityStatus.ACTIVE, now, now, Set.of(), null);
     }
 
     public DigitalId updateLegalName(LegalName newName, Instant updatedAt) {
         return new DigitalId(this.id, newName, this.dateOfBirth, this.status,
-                this.createdAt, updatedAt, this.restrictions,
-                this.residentialRegion, this.welfareBand);
-    }
-
-    public DigitalId withResidentialRegion(String region) {
-        return new DigitalId(this.id, this.currentLegalName, this.dateOfBirth, this.status,
-                this.createdAt, this.updatedAt, this.restrictions,
-                region, this.welfareBand);
+                this.createdAt, updatedAt, this.restrictions, this.welfareBand);
     }
 
     public DigitalId withWelfareBand(WelfareBand band) {
         return new DigitalId(this.id, this.currentLegalName, this.dateOfBirth, this.status,
-                this.createdAt, this.updatedAt, this.restrictions,
-                this.residentialRegion, band);
+                this.createdAt, this.updatedAt, this.restrictions, band);
     }
 
     public OperationResult<DigitalId> changeStatus(IdentityStatus target, Instant updatedAt) {
@@ -63,8 +53,7 @@ public final class DigitalId {
         }
         return OperationResult.success(
                 new DigitalId(this.id, this.currentLegalName, this.dateOfBirth, target,
-                        this.createdAt, updatedAt, this.restrictions,
-                        this.residentialRegion, this.welfareBand));
+                        this.createdAt, updatedAt, this.restrictions, this.welfareBand));
     }
 
     public OperationResult<DigitalId> addRestriction(Restriction restriction, LocalDate asOf) {
@@ -81,8 +70,7 @@ public final class DigitalId {
         updated.add(restriction);
         return OperationResult.success(
                 new DigitalId(this.id, this.currentLegalName, this.dateOfBirth, this.status,
-                        this.createdAt, this.updatedAt, updated,
-                        this.residentialRegion, this.welfareBand));
+                        this.createdAt, this.updatedAt, updated, this.welfareBand));
     }
 
     public DigitalIdNumber getId()            { return id; }
@@ -92,6 +80,5 @@ public final class DigitalId {
     public Instant getCreatedAt()             { return createdAt; }
     public Instant getUpdatedAt()             { return updatedAt; }
     public Set<Restriction> getRestrictions() { return restrictions; }
-    public String getResidentialRegion()      { return residentialRegion; }
     public WelfareBand getWelfareBand()       { return welfareBand; }
 }
