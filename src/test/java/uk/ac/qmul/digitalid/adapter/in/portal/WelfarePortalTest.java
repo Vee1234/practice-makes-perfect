@@ -28,12 +28,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class WelfarePortalTest {
 
-    private static final Instant    NOW          = Instant.parse("2026-01-01T00:00:00Z");
-    private static final LocalDate  CHECK_DATE   = LocalDate.of(2026, 1, 1);
-    private static final String     REGION       = "London";
-    private static final DigitalIdNumber ID      = DigitalIdNumber.of("DID-000001");
-    private static final LegalName  NAME         = new LegalName("Jane Doe");
-    private static final LocalDate  ADULT_DOB    = CHECK_DATE.minusYears(30);
+    private static final Instant    NOW        = Instant.parse("2026-01-01T00:00:00Z");
+    private static final LocalDate  CHECK_DATE = LocalDate.of(2026, 1, 1);
+    private static final DigitalIdNumber ID    = DigitalIdNumber.of("DID-000001");
+    private static final LegalName  NAME       = new LegalName("Jane Doe");
+    private static final LocalDate  ADULT_DOB  = CHECK_DATE.minusYears(30);
 
     private InMemoryDigitalIdRepository repository;
     private WelfarePortal portal;
@@ -74,20 +73,19 @@ class WelfarePortalTest {
     // 16.3 — WelfarePortal facade behaviour
 
     @Test
-    void shouldBeEligible_whenActiveIdentityMatchesRegionAndHasEligibleBand() {
+    void shouldBeEligible_whenActiveIdentityHasEligibleBand() {
         repository.save(eligibleIdentity());
 
-        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID, REGION, CHECK_DATE);
+        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID);
 
         assertThat(response.isEligible()).isTrue();
-        assertThat(response.isRegionMatched()).isTrue();
         assertThat(response.getBandCategory()).isEqualTo(BandCategory.ELIGIBLE);
         assertThat(response.getReasonCodes()).isEmpty();
     }
 
     @Test
     void shouldBeIneligible_withNotFound_whenIdentityDoesNotExist() {
-        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID, REGION, CHECK_DATE);
+        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID);
 
         assertThat(response.isEligible()).isFalse();
         assertThat(response.getBandCategory()).isEqualTo(BandCategory.UNKNOWN);
@@ -96,48 +94,20 @@ class WelfarePortalTest {
 
     @Test
     void shouldBeIneligible_whenIdentityIsSuspended() {
-        DigitalId suspended = baseIdentityWithRegionAndBand()
-                .changeStatus(IdentityStatus.SUSPENDED, NOW).getPayload();
+        DigitalId suspended = eligibleIdentity().changeStatus(IdentityStatus.SUSPENDED, NOW).getPayload();
         repository.save(suspended);
 
-        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID, REGION, CHECK_DATE);
+        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID);
 
         assertThat(response.isEligible()).isFalse();
         assertThat(response.getReasonCodes()).contains("INACTIVE_STATUS");
     }
 
     @Test
-    void shouldBeIneligible_withRegionMismatch_whenSubmittedRegionDiffers() {
-        repository.save(eligibleIdentity());
-
-        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID, "Manchester", CHECK_DATE);
-
-        assertThat(response.isEligible()).isFalse();
-        assertThat(response.isRegionMatched()).isFalse();
-        assertThat(response.getReasonCodes()).contains("REGION_MISMATCH");
-    }
-
-    @Test
-    void shouldBeIneligible_withRegionNotSet_whenIdentityHasNoResidentialRegion() {
-        DigitalId noRegion = DigitalId.create(ID, NAME, ADULT_DOB, NOW)
-                .withWelfareBand(WelfareBand.BAND_A);
-        repository.save(noRegion);
-
-        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID, REGION, CHECK_DATE);
-
-        assertThat(response.isEligible()).isFalse();
-        assertThat(response.isRegionMatched()).isFalse();
-        assertThat(response.getReasonCodes()).contains("REGION_NOT_SET");
-    }
-
-    @Test
     void shouldBeIneligible_withBandNotEligible_whenIdentityHasBandC() {
-        DigitalId bandC = DigitalId.create(ID, NAME, ADULT_DOB, NOW)
-                .withResidentialRegion(REGION)
-                .withWelfareBand(WelfareBand.BAND_C);
-        repository.save(bandC);
+        repository.save(DigitalId.create(ID, NAME, ADULT_DOB, NOW).withWelfareBand(WelfareBand.BAND_C));
 
-        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID, REGION, CHECK_DATE);
+        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID);
 
         assertThat(response.isEligible()).isFalse();
         assertThat(response.getBandCategory()).isEqualTo(BandCategory.NOT_ELIGIBLE);
@@ -146,11 +116,9 @@ class WelfarePortalTest {
 
     @Test
     void shouldBeIneligible_withWelfareBandNotSet_whenBandIsNull() {
-        DigitalId noBand = DigitalId.create(ID, NAME, ADULT_DOB, NOW)
-                .withResidentialRegion(REGION);
-        repository.save(noBand);
+        repository.save(DigitalId.create(ID, NAME, ADULT_DOB, NOW));
 
-        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID, REGION, CHECK_DATE);
+        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID);
 
         assertThat(response.isEligible()).isFalse();
         assertThat(response.getBandCategory()).isEqualTo(BandCategory.UNKNOWN);
@@ -164,7 +132,7 @@ class WelfarePortalTest {
         DigitalId restricted = eligibleIdentity().addRestriction(welfareReview, CHECK_DATE).getPayload();
         repository.save(restricted);
 
-        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID, REGION, CHECK_DATE);
+        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID);
 
         assertThat(response.isEligible()).isFalse();
         assertThat(response.getReasonCodes()).contains("WELFARE_REVIEW_ACTIVE");
@@ -177,21 +145,15 @@ class WelfarePortalTest {
         DigitalId identity = eligibleIdentity().addRestriction(expired, CHECK_DATE).getPayload();
         repository.save(identity);
 
-        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID, REGION, CHECK_DATE);
+        WelfareEligibilityResponse response = portal.checkBenefitEligibility(ID);
 
         assertThat(response.isEligible()).isTrue();
         assertThat(response.getReasonCodes()).isEmpty();
     }
 
-    // helpers
-
-    private DigitalId baseIdentityWithRegionAndBand() {
-        return DigitalId.create(ID, NAME, ADULT_DOB, NOW)
-                .withResidentialRegion(REGION)
-                .withWelfareBand(WelfareBand.BAND_A);
-    }
+    // helper
 
     private DigitalId eligibleIdentity() {
-        return baseIdentityWithRegionAndBand();
+        return DigitalId.create(ID, NAME, ADULT_DOB, NOW).withWelfareBand(WelfareBand.BAND_A);
     }
 }

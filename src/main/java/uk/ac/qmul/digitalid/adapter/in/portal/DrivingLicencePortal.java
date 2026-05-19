@@ -27,9 +27,9 @@ public final class DrivingLicencePortal {
         this.projector  = new DrivingLicenceResponseProjector();
     }
 
-    public DrivingLicenceResponse checkLicenceEligibility(DigitalIdNumber id, LocalDate checkDate) {
-        Objects.requireNonNull(id,        "id is required");
-        Objects.requireNonNull(checkDate, "checkDate is required");
+    public DrivingLicenceResponse checkLicenceEligibility(DigitalIdNumber id) {
+        Objects.requireNonNull(id, "id is required");
+        LocalDate checkDate = LocalDate.now(clock);
 
         CompositeEligibilityPolicy policy = new CompositeEligibilityPolicy(
                 checkDate,

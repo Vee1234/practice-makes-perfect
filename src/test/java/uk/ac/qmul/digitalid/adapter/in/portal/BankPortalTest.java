@@ -27,10 +27,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class BankPortalTest {
 
-    private static final Instant NOW         = Instant.parse("2026-01-01T00:00:00Z");
-    private static final DigitalIdNumber ID  = DigitalIdNumber.of("DID-000001");
-    private static final LegalName STORED_NAME = new LegalName("Jane Doe");
-    private static final LocalDate STORED_DOB  = LocalDate.of(1990, 6, 15);
+    private static final Instant NOW           = Instant.parse("2026-01-01T00:00:00Z");
+    private static final LocalDate CHECK_DATE  = LocalDate.ofInstant(NOW, ZoneOffset.UTC);
+    private static final DigitalIdNumber ID    = DigitalIdNumber.of("DID-000001");
+    private static final LegalName NAME        = new LegalName("Jane Doe");
+    private static final LocalDate DOB         = LocalDate.of(1990, 6, 15);
 
     private InMemoryDigitalIdRepository repository;
     private BankPortal portal;
@@ -71,62 +72,31 @@ class BankPortalTest {
     // 13.3 — BankPortal facade behaviour
 
     @Test
-    void shouldPassKyc_whenStatusIsActiveAndNameAndDobMatch() {
-        repository.save(activeIdentity());
-        BankKycRequest request = new BankKycRequest(ID, STORED_NAME, STORED_DOB);
+    void shouldPassKyc_whenIdentityIsActive() {
+        repository.save(DigitalId.create(ID, NAME, DOB, NOW));
 
-        BankKycResponse response = portal.checkBasicKyc(request);
+        BankKycResponse response = portal.checkBasicKyc(ID);
 
         assertThat(response.isValidNow()).isTrue();
-        assertThat(response.isNameMatched()).isTrue();
-        assertThat(response.isDobMatched()).isTrue();
         assertThat(response.getKycDecision()).isEqualTo(KycDecision.PASS);
         assertThat(response.getReasonCodes()).isEmpty();
     }
 
     @Test
-    void shouldFailKyc_whenNameDoesNotMatch() {
-        repository.save(activeIdentity());
-        BankKycRequest request = new BankKycRequest(ID, new LegalName("Wrong Name"), STORED_DOB);
-
-        BankKycResponse response = portal.checkBasicKyc(request);
-
-        assertThat(response.isValidNow()).isTrue();
-        assertThat(response.isNameMatched()).isFalse();
-        assertThat(response.getKycDecision()).isEqualTo(KycDecision.FAIL);
-        assertThat(response.getReasonCodes()).contains("NAME_MISMATCH");
-    }
-
-    @Test
-    void shouldFailKyc_whenDobDoesNotMatch() {
-        repository.save(activeIdentity());
-        BankKycRequest request = new BankKycRequest(ID, STORED_NAME, LocalDate.of(1999, 1, 1));
-
-        BankKycResponse response = portal.checkBasicKyc(request);
-
-        assertThat(response.isValidNow()).isTrue();
-        assertThat(response.isDobMatched()).isFalse();
-        assertThat(response.getKycDecision()).isEqualTo(KycDecision.FAIL);
-        assertThat(response.getReasonCodes()).contains("DOB_MISMATCH");
-    }
-
-    @Test
     void shouldFailKyc_whenIdentityIsSuspended() {
-        repository.save(identity(IdentityStatus.SUSPENDED));
-        BankKycRequest request = new BankKycRequest(ID, STORED_NAME, STORED_DOB);
+        repository.save(DigitalId.create(ID, NAME, DOB, NOW)
+                .changeStatus(IdentityStatus.SUSPENDED, NOW).getPayload());
 
-        BankKycResponse response = portal.checkBasicKyc(request);
+        BankKycResponse response = portal.checkBasicKyc(ID);
 
         assertThat(response.isValidNow()).isFalse();
         assertThat(response.getKycDecision()).isEqualTo(KycDecision.FAIL);
-        assertThat(response.getReasonCodes()).contains("INVALID_STATUS");
+        assertThat(response.getReasonCodes()).contains("INACTIVE_STATUS");
     }
 
     @Test
     void shouldFailKyc_whenIdentityDoesNotExist() {
-        BankKycRequest request = new BankKycRequest(ID, STORED_NAME, STORED_DOB);
-
-        BankKycResponse response = portal.checkBasicKyc(request);
+        BankKycResponse response = portal.checkBasicKyc(ID);
 
         assertThat(response.isValidNow()).isFalse();
         assertThat(response.getKycDecision()).isEqualTo(KycDecision.FAIL);
@@ -135,35 +105,16 @@ class BankPortalTest {
 
     @Test
     void shouldFailKyc_whenActiveFinancialReviewRestrictionExists() {
-        repository.save(activeIdentityWithFinancialReview());
-        BankKycRequest request = new BankKycRequest(ID, STORED_NAME, STORED_DOB);
+        Restriction activeReview = new Restriction(
+                RestrictionType.FINANCIAL_REVIEW, CHECK_DATE.minusDays(30), null, "UNDER_REVIEW");
+        DigitalId identity = DigitalId.create(ID, NAME, DOB, NOW)
+                .addRestriction(activeReview, CHECK_DATE).getPayload();
+        repository.save(identity);
 
-        BankKycResponse response = portal.checkBasicKyc(request);
+        BankKycResponse response = portal.checkBasicKyc(ID);
 
         assertThat(response.isValidNow()).isTrue();
         assertThat(response.getKycDecision()).isEqualTo(KycDecision.FAIL);
         assertThat(response.getReasonCodes()).contains("FINANCIAL_REVIEW_ACTIVE");
-    }
-
-    // helpers
-
-    private static final LocalDate CHECK_DATE = LocalDate.ofInstant(NOW, java.time.ZoneOffset.UTC);
-
-    private DigitalId activeIdentity() {
-        return DigitalId.create(ID, STORED_NAME, STORED_DOB, NOW);
-    }
-
-    private DigitalId identity(IdentityStatus targetStatus) {
-        return activeIdentity().changeStatus(targetStatus, NOW).getPayload();
-    }
-
-    private DigitalId activeIdentityWithFinancialReview() {
-        DigitalId base = activeIdentity();
-        Restriction activeReview = new Restriction(
-                RestrictionType.FINANCIAL_REVIEW,
-                CHECK_DATE.minusDays(30),
-                null,
-                "UNDER_REVIEW");
-        return base.addRestriction(activeReview, CHECK_DATE).getPayload();
     }
 }

@@ -5,9 +5,12 @@ import uk.ac.qmul.digitalid.application.auth.OrganisationRole;
 import uk.ac.qmul.digitalid.application.port.in.VerifyIdentityPort;
 import uk.ac.qmul.digitalid.application.service.consumption.VerificationDecision;
 import uk.ac.qmul.digitalid.application.service.consumption.VerificationRequest;
+import uk.ac.qmul.digitalid.domain.DigitalIdNumber;
+import uk.ac.qmul.digitalid.domain.RestrictionType;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 
 public final class BankPortal {
@@ -24,21 +27,19 @@ public final class BankPortal {
         this.projector  = new BankKycResponseProjector();
     }
 
-    public BankKycResponse checkBasicKyc(BankKycRequest request) {
-        Objects.requireNonNull(request, "request is required");
-
+    public BankKycResponse checkBasicKyc(DigitalIdNumber id) {
+        Objects.requireNonNull(id, "id is required");
         LocalDate checkDate = LocalDate.now(clock);
-        BankKycPolicy policy = new BankKycPolicy(
-                request.getSubmittedName(), request.getSubmittedDateOfBirth(), checkDate);
 
-        VerificationDecision decision = verifyPort.verify(
-                new VerificationRequest(request.getDigitalIdNumber(), BANK, policy));
+        CompositeEligibilityPolicy policy = new CompositeEligibilityPolicy(
+                checkDate,
+                List.of(
+                        new ActiveStatusRule(),
+                        new NoActiveRestrictionRule(RestrictionType.FINANCIAL_REVIEW)
+                )
+        );
 
-        return projector.project(
-                decision,
-                policy.isStatusValid(),
-                policy.isNameMatched(),
-                policy.isDobMatched(),
-                policy.isUnderFinancialReview());
+        VerificationDecision decision = verifyPort.verify(new VerificationRequest(id, BANK, policy));
+        return projector.project(decision, policy.getFailingReasonCodes());
     }
 }

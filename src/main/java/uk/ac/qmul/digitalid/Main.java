@@ -96,7 +96,11 @@ public class Main {
                 if (id.isEmpty()) return;
                 Optional<LegalName> name       = readField(in, out, "Full legal name", LegalName::new);
                 if (name.isEmpty()) return;
-                Optional<LocalDate> dob        = readField(in, out, "Date of birth (YYYY-MM-DD)", LocalDate::parse);
+                Optional<LocalDate> dob        = readField(in, out, "Date of birth (YYYY-MM-DD)", raw -> {
+                    LocalDate date = LocalDate.parse(raw);
+                    if (date.isAfter(LocalDate.now())) throw new IllegalArgumentException("Date of birth cannot be in the future");
+                    return date;
+                });
                 if (dob.isEmpty()) return;
 
                 OperationResult<?> result = port.createIdentity(new IdentityCreateCommand(
@@ -148,13 +152,8 @@ public class Main {
             public void execute(Scanner in, PrintStream out) {
                 Optional<DigitalIdNumber> id = readField(in, out, "Digital ID number", DigitalIdNumber::of);
                 if (id.isEmpty()) return;
-                Optional<LegalName> name     = readField(in, out, "Submitted full name", LegalName::new);
-                if (name.isEmpty()) return;
-                Optional<LocalDate> dob      = readField(in, out, "Submitted date of birth (YYYY-MM-DD)", LocalDate::parse);
-                if (dob.isEmpty()) return;
 
-                BankKycResponse response = portal.checkBasicKyc(
-                        new BankKycRequest(id.get(), name.get(), dob.get()));
+                BankKycResponse response = portal.checkBasicKyc(id.get());
 
                 out.println("Valid now:     " + response.isValidNow());
                 out.println("Name matched:  " + response.isNameMatched());
@@ -173,8 +172,7 @@ public class Main {
                 Optional<DigitalIdNumber> id = readField(in, out, "Digital ID number", DigitalIdNumber::of);
                 if (id.isEmpty()) return;
 
-                DrivingLicenceResponse response =
-                        portal.checkLicenceEligibility(id.get(), LocalDate.now());
+                DrivingLicenceResponse response = portal.checkLicenceEligibility(id.get());
 
                 out.println("Eligible:          " + response.isEligible());
                 out.println("Minimum age met:   " + response.isMinimumAgeMet());
@@ -191,14 +189,8 @@ public class Main {
             public void execute(Scanner in, PrintStream out) {
                 Optional<DigitalIdNumber> id = readField(in, out, "Digital ID number", DigitalIdNumber::of);
                 if (id.isEmpty()) return;
-                Optional<String> region      = readField(in, out, "Residential region", r -> {
-                    if (r.isBlank()) throw new IllegalArgumentException("Region cannot be blank");
-                    return r;
-                });
-                if (region.isEmpty()) return;
 
-                WelfareEligibilityResponse response =
-                        portal.checkBenefitEligibility(id.get(), region.get(), LocalDate.now());
+                WelfareEligibilityResponse response = portal.checkBenefitEligibility(id.get());
 
                 out.println("Eligible:       " + response.isEligible());
                 out.println("Region matched: " + response.isRegionMatched());

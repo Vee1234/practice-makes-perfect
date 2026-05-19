@@ -32,19 +32,15 @@ public final class WelfarePortal {
         this.projector  = new WelfareEligibilityResponseProjector();
     }
 
-    public WelfareEligibilityResponse checkBenefitEligibility(DigitalIdNumber id,
-                                                               String submittedRegion,
-                                                               LocalDate checkDate) {
-        Objects.requireNonNull(id,             "id is required");
-        Objects.requireNonNull(submittedRegion, "submittedRegion is required");
-        Objects.requireNonNull(checkDate,      "checkDate is required");
+    public WelfareEligibilityResponse checkBenefitEligibility(DigitalIdNumber id) {
+        Objects.requireNonNull(id, "id is required");
+        LocalDate checkDate = LocalDate.now(clock);
 
         CompositeEligibilityPolicy policy = new CompositeEligibilityPolicy(
                 checkDate,
                 List.of(
                         new ActiveStatusRule(),
                         new NoActiveRestrictionRule(RestrictionType.WELFARE_REVIEW),
-                        new RegionMatchRule(submittedRegion),
                         new WelfareBandEligibilityRule(ELIGIBLE_BANDS)
                 )
         );
