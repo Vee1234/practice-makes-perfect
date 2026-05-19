@@ -42,7 +42,7 @@ class DigitalIdTest {
     }
 
     @Test
-    void invalidLegalNameRejected() {
+    void blankLegalNameRejected() {
         assertThrows(IllegalArgumentException.class, () -> new LegalName(""));
         assertThrows(IllegalArgumentException.class, () -> new LegalName("   "));
     }
