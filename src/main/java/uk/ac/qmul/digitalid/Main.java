@@ -9,10 +9,12 @@ import uk.ac.qmul.digitalid.application.audit.AuditEventPublisher;
 import uk.ac.qmul.digitalid.application.auth.AuthorisationService;
 import uk.ac.qmul.digitalid.application.auth.Organisation;
 import uk.ac.qmul.digitalid.application.auth.OrganisationRole;
+import uk.ac.qmul.digitalid.application.port.in.AddRestrictionPort;
 import uk.ac.qmul.digitalid.application.port.in.ChangeStatusPort;
 import uk.ac.qmul.digitalid.application.port.in.CreateIdentityPort;
 import uk.ac.qmul.digitalid.application.service.audit.AuditQueryService;
 import uk.ac.qmul.digitalid.application.service.consumption.DigitalIdConsumptionService;
+import uk.ac.qmul.digitalid.application.service.management.AddRestrictionCommand;
 import uk.ac.qmul.digitalid.application.service.management.ChangeStatusCommand;
 import uk.ac.qmul.digitalid.application.service.management.DigitalIdManagementService;
 import uk.ac.qmul.digitalid.application.service.management.IdentityCreateCommand;
@@ -20,6 +22,8 @@ import uk.ac.qmul.digitalid.domain.DigitalIdNumber;
 import uk.ac.qmul.digitalid.domain.IdentityStatus;
 import uk.ac.qmul.digitalid.domain.LegalName;
 import uk.ac.qmul.digitalid.domain.OperationResult;
+import uk.ac.qmul.digitalid.domain.Restriction;
+import uk.ac.qmul.digitalid.domain.RestrictionType;
 
 import java.io.PrintStream;
 import java.time.Clock;
@@ -63,7 +67,10 @@ public class Main {
         Map<String, List<ConsoleCommand>> orgCommands = Map.of(
                 "CENTRAL_AUTHORITY", List.of(
                         createIdentityCommand(managementService),
-                        suspendIdentityCommand(managementService)
+                        suspendIdentityCommand(managementService),
+                        activateIdentityCommand(managementService),
+                        revokeIdentityCommand(managementService),
+                        addRestrictionCommand(managementService)
                 ),
                 "EMPLOYER", List.of(
                         employerVerifyCommand(employerPortal)
@@ -124,6 +131,94 @@ public class Main {
                         id.get(), IdentityStatus.SUSPENDED, CENTRAL_AUTHORITY));
 
                 if (result.isSuccess()) out.println("Identity suspended: " + id.get().value());
+                else                   out.println("Failed: " + result.getError().message());
+            }
+        };
+    }
+
+    private static ConsoleCommand activateIdentityCommand(ChangeStatusPort port) {
+        return new ConsoleCommand() {
+            public String getDescription() { return "Activate (un-suspend) a Digital ID"; }
+
+            public void execute(Scanner in, PrintStream out) {
+                Optional<DigitalIdNumber> id = readField(in, out, "Digital ID number", DigitalIdNumber::of);
+                if (id.isEmpty()) return;
+
+                OperationResult<?> result = port.changeStatus(new ChangeStatusCommand(
+                        id.get(), IdentityStatus.ACTIVE, CENTRAL_AUTHORITY));
+
+                if (result.isSuccess()) out.println("Identity activated: " + id.get().value());
+                else                   out.println("Failed: " + result.getError().message());
+            }
+        };
+    }
+
+    private static ConsoleCommand revokeIdentityCommand(ChangeStatusPort port) {
+        return new ConsoleCommand() {
+            public String getDescription() { return "Revoke a Digital ID"; }
+
+            public void execute(Scanner in, PrintStream out) {
+                Optional<DigitalIdNumber> id = readField(in, out, "Digital ID number", DigitalIdNumber::of);
+                if (id.isEmpty()) return;
+
+                OperationResult<?> result = port.changeStatus(new ChangeStatusCommand(
+                        id.get(), IdentityStatus.REVOKED, CENTRAL_AUTHORITY));
+
+                if (result.isSuccess()) out.println("Identity revoked: " + id.get().value());
+                else                   out.println("Failed: " + result.getError().message());
+            }
+        };
+    }
+
+    private static ConsoleCommand addRestrictionCommand(AddRestrictionPort port) {
+        return new ConsoleCommand() {
+            public String getDescription() { return "Add a restriction to a Digital ID"; }
+
+            public void execute(Scanner in, PrintStream out) {
+                Optional<DigitalIdNumber> id = readField(in, out, "Digital ID number", DigitalIdNumber::of);
+                if (id.isEmpty()) return;
+
+                RestrictionType[] types = RestrictionType.values();
+                out.println("Restriction type:");
+                for (int i = 0; i < types.length; i++) {
+                    out.printf("  %d. %s%n", i + 1, types[i]);
+                }
+                Optional<RestrictionType> type = readField(in, out, "Select type", raw -> {
+                    int index = Integer.parseInt(raw) - 1;
+                    if (index < 0 || index >= types.length) throw new IllegalArgumentException("Invalid selection");
+                    return types[index];
+                });
+                if (type.isEmpty()) return;
+
+                Optional<String> reason = readField(in, out, "Reason (short description)", r -> {
+                    if (r.isBlank()) throw new IllegalArgumentException("Reason cannot be blank");
+                    return r;
+                });
+                if (reason.isEmpty()) return;
+
+                // End date handled inline: "none" = indefinite, "0" = go back
+                LocalDate endsOn = null;
+                while (true) {
+                    out.print("End date (YYYY-MM-DD, 'none' for indefinite, 0 to go back): ");
+                    if (!in.hasNextLine()) return;
+                    String raw = in.nextLine().trim();
+                    if (raw.equals("0")) return;
+                    if (raw.equalsIgnoreCase("none")) { endsOn = null; break; }
+                    try {
+                        LocalDate date = LocalDate.parse(raw);
+                        if (date.isBefore(LocalDate.now())) { out.println("  Invalid: End date cannot be in the past."); continue; }
+                        endsOn = date;
+                        break;
+                    } catch (Exception e) {
+                        out.println("  Invalid: " + e.getMessage());
+                    }
+                }
+
+                Restriction restriction = new Restriction(type.get(), LocalDate.now(), endsOn, reason.get());
+                OperationResult<?> result = port.addRestriction(
+                        new AddRestrictionCommand(id.get(), restriction, CENTRAL_AUTHORITY));
+
+                if (result.isSuccess()) out.println("Restriction added to: " + id.get().value());
                 else                   out.println("Failed: " + result.getError().message());
             }
         };
