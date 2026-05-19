@@ -3,7 +3,8 @@ package uk.ac.qmul.digitalid.application.service.management;
 import uk.ac.qmul.digitalid.application.audit.AuditEvent;
 import uk.ac.qmul.digitalid.application.audit.AuditEventPublisher;
 import uk.ac.qmul.digitalid.application.auth.AuthorisationService;
-import uk.ac.qmul.digitalid.application.port.in.IdentityManager;
+import uk.ac.qmul.digitalid.application.port.in.CreateIdentityPort;
+import uk.ac.qmul.digitalid.application.port.in.UpdateIdentityPort;
 import uk.ac.qmul.digitalid.application.port.out.DigitalIdRepository;
 import uk.ac.qmul.digitalid.domain.*;
 
@@ -11,7 +12,7 @@ import java.time.Clock;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class DigitalIdManagementService implements IdentityManager {
+public final class DigitalIdManagementService implements CreateIdentityPort, UpdateIdentityPort {
 
     private final DigitalIdRepository repository;
     private final AuditEventPublisher auditPublisher;
@@ -46,6 +47,34 @@ public final class DigitalIdManagementService implements IdentityManager {
         audit("CREATE_IDENTITY", command.requestedBy().organisationId(), true, null);
 
         return OperationResult.success(digitalId);
+    }
+
+    @Override
+    public OperationResult<DigitalId> updateMutableAttributes(IdentityUpdateCommand command) {
+        Optional<DomainError> auth = authorisationService.authoriseManagement(command.requestedBy());
+        if (auth.isPresent()) {
+            audit("UPDATE_IDENTITY", command.requestedBy().organisationId(), false, auth.get().code().name());
+            return OperationResult.failure(auth.get());
+        }
+
+        DigitalId existing = repository.findById(command.digitalIdNumber()).orElse(null);
+        if (existing == null) {
+            DomainError error = new DomainError(ErrorCode.NOT_FOUND, "Identity not found");
+            audit("UPDATE_IDENTITY", command.requestedBy().organisationId(), false, error.code().name());
+            return OperationResult.failure(error);
+        }
+
+        if (existing.status() == IdentityStatus.REVOKED || existing.status() == IdentityStatus.EXPIRED) {
+            DomainError error = new DomainError(ErrorCode.NOT_MODIFIABLE, "Identity is in a terminal state and cannot be modified");
+            audit("UPDATE_IDENTITY", command.requestedBy().organisationId(), false, error.code().name());
+            return OperationResult.failure(error);
+        }
+
+        DigitalId updated = existing.updateLegalName(command.newLegalName(), clock.instant());
+        repository.save(updated);
+        audit("UPDATE_IDENTITY", command.requestedBy().organisationId(), true, null);
+
+        return OperationResult.success(updated);
     }
 
     private void audit(String eventType, String actor, boolean success, String reasonCode) {
