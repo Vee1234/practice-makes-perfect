@@ -3,7 +3,8 @@ package uk.ac.qmul.digitalid.application.service.management;
 import uk.ac.qmul.digitalid.application.audit.AuditEvent;
 import uk.ac.qmul.digitalid.application.audit.AuditEventPublisher;
 import uk.ac.qmul.digitalid.application.auth.AuthorisationService;
-import uk.ac.qmul.digitalid.application.port.in.IdentityManager;
+import uk.ac.qmul.digitalid.application.port.in.CreateIdentityUseCase;
+import uk.ac.qmul.digitalid.application.port.in.UpdateIdentityUseCase;
 import uk.ac.qmul.digitalid.application.port.out.DigitalIdRepository;
 import uk.ac.qmul.digitalid.domain.*;
 
@@ -11,7 +12,7 @@ import java.time.Clock;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class DigitalIdManagementService implements IdentityManager {
+public final class DigitalIdManagementService implements CreateIdentityUseCase, UpdateIdentityUseCase {
 
     private final DigitalIdRepository repository;
     private final AuditEventPublisher auditPublisher;
@@ -46,6 +47,11 @@ public final class DigitalIdManagementService implements IdentityManager {
         audit("CREATE_IDENTITY", command.requestedBy().organisationId(), true, null);
 
         return OperationResult.success(digitalId);
+    }
+
+    @Override
+    public OperationResult<DigitalId> updateMutableAttributes(IdentityUpdateCommand command) {
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     private void audit(String eventType, String actor, boolean success, String reasonCode) {
