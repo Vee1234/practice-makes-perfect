@@ -23,10 +23,10 @@ public final class Restriction {
         this.reasonCode = reasonCode;
     }
 
-    public RestrictionType type() { return type; }
-    public LocalDate startsOn()   { return startsOn; }
-    public LocalDate endsOn()     { return endsOn; }
-    public String reasonCode()    { return reasonCode; }
+    public RestrictionType getType()    { return type; }
+    public LocalDate getStartsOn()      { return startsOn; }
+    public LocalDate getEndsOn()        { return endsOn; }
+    public String getReasonCode()       { return reasonCode; }
 
     public boolean isActiveOn(LocalDate date) {
         return !date.isBefore(startsOn) && (endsOn == null || !date.isAfter(endsOn));

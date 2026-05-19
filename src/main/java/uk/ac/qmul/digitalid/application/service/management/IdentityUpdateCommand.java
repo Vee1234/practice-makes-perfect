@@ -6,22 +6,17 @@ import uk.ac.qmul.digitalid.domain.LegalName;
 
 import java.util.Objects;
 
-public final class IdentityUpdateCommand {
+public final class IdentityUpdateCommand extends ManagementCommand {
 
-    private final DigitalIdNumber digitalIdNumber;
     private final LegalName newLegalName;
-    private final Organisation requestedBy;
 
     public IdentityUpdateCommand(DigitalIdNumber digitalIdNumber, LegalName newLegalName, Organisation requestedBy) {
-        Objects.requireNonNull(digitalIdNumber, "digitalIdNumber is required");
-        Objects.requireNonNull(newLegalName, "newLegalName is required");
-        Objects.requireNonNull(requestedBy, "requestedBy is required");
-        this.digitalIdNumber = digitalIdNumber;
-        this.newLegalName = newLegalName;
-        this.requestedBy = requestedBy;
+        super(digitalIdNumber, requestedBy);
+        this.newLegalName = Objects.requireNonNull(newLegalName, "newLegalName is required");
     }
 
-    public DigitalIdNumber digitalIdNumber() { return digitalIdNumber; }
-    public LegalName newLegalName()          { return newLegalName; }
-    public Organisation requestedBy()        { return requestedBy; }
+    public LegalName getNewLegalName() { return newLegalName; }
+
+    @Override
+    public String getEventType() { return "UPDATE_IDENTITY"; }
 }

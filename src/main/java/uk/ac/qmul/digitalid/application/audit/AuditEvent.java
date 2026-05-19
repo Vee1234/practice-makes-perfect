@@ -22,11 +22,11 @@ public final class AuditEvent {
         this.reasonCode = reasonCode;
     }
 
-    public String eventType()  { return eventType; }
-    public String actor()      { return actor; }
-    public Instant timestamp() { return timestamp; }
-    public boolean success()   { return success; }
-    public String reasonCode() { return reasonCode; }
+    public String getEventType()  { return eventType; }
+    public String getActor()      { return actor; }
+    public Instant getTimestamp() { return timestamp; }
+    public boolean isSuccess()    { return success; }
+    public String getReasonCode() { return reasonCode; }
 
     @Override
     public boolean equals(Object o) {

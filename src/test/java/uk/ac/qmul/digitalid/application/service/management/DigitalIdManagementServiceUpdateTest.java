@@ -48,7 +48,7 @@ class DigitalIdManagementServiceUpdateTest {
         OperationResult<DigitalId> result = service.updateMutableAttributes(command);
 
         assertThat(result.isSuccess()).isTrue();
-        assertThat(result.payload().currentLegalName()).isEqualTo(new LegalName("Jane Smith"));
+        assertThat(result.getPayload().getCurrentLegalName()).isEqualTo(new LegalName("Jane Smith"));
     }
 
     @Test
@@ -57,7 +57,7 @@ class DigitalIdManagementServiceUpdateTest {
 
         service.updateMutableAttributes(command);
 
-        assertThat(repository.findById(ID).get().currentLegalName()).isEqualTo(new LegalName("Jane Smith"));
+        assertThat(repository.findById(ID).get().getCurrentLegalName()).isEqualTo(new LegalName("Jane Smith"));
     }
 
     @Test
@@ -68,29 +68,29 @@ class DigitalIdManagementServiceUpdateTest {
         OperationResult<DigitalId> result = service.updateMutableAttributes(command);
 
         assertThat(result.isSuccess()).isFalse();
-        assertThat(result.error().code()).isEqualTo(ErrorCode.NOT_FOUND);
+        assertThat(result.getError().code()).isEqualTo(ErrorCode.NOT_FOUND);
     }
 
     @Test
     void shouldRejectUpdate_whenIdentityIsRevoked() {
-        repository.save(repository.findById(ID).get().changeStatus(IdentityStatus.REVOKED, NOW).payload());
+        repository.save(repository.findById(ID).get().changeStatus(IdentityStatus.REVOKED, NOW).getPayload());
         IdentityUpdateCommand command = new IdentityUpdateCommand(ID, new LegalName("Jane Smith"), CENTRAL);
 
         OperationResult<DigitalId> result = service.updateMutableAttributes(command);
 
         assertThat(result.isSuccess()).isFalse();
-        assertThat(result.error().code()).isEqualTo(ErrorCode.NOT_MODIFIABLE);
+        assertThat(result.getError().code()).isEqualTo(ErrorCode.NOT_MODIFIABLE);
     }
 
     @Test
     void shouldRejectUpdate_whenIdentityIsExpired() {
-        repository.save(repository.findById(ID).get().changeStatus(IdentityStatus.EXPIRED, NOW).payload());
+        repository.save(repository.findById(ID).get().changeStatus(IdentityStatus.EXPIRED, NOW).getPayload());
         IdentityUpdateCommand command = new IdentityUpdateCommand(ID, new LegalName("Jane Smith"), CENTRAL);
 
         OperationResult<DigitalId> result = service.updateMutableAttributes(command);
 
         assertThat(result.isSuccess()).isFalse();
-        assertThat(result.error().code()).isEqualTo(ErrorCode.NOT_MODIFIABLE);
+        assertThat(result.getError().code()).isEqualTo(ErrorCode.NOT_MODIFIABLE);
     }
 
     @Test
@@ -100,7 +100,7 @@ class DigitalIdManagementServiceUpdateTest {
         OperationResult<DigitalId> result = service.updateMutableAttributes(command);
 
         assertThat(result.isSuccess()).isFalse();
-        assertThat(result.error().code()).isEqualTo(ErrorCode.UNAUTHORISED_OPERATION);
+        assertThat(result.getError().code()).isEqualTo(ErrorCode.UNAUTHORISED_OPERATION);
     }
 
     @Test
@@ -110,7 +110,7 @@ class DigitalIdManagementServiceUpdateTest {
         service.updateMutableAttributes(command);
 
         assertThat(auditSink.events()).hasSize(1);
-        assertThat(auditSink.events().get(0).success()).isTrue();
+        assertThat(auditSink.events().get(0).isSuccess()).isTrue();
     }
 
     @Test
@@ -121,6 +121,6 @@ class DigitalIdManagementServiceUpdateTest {
         service.updateMutableAttributes(command);
 
         assertThat(auditSink.events()).hasSize(1);
-        assertThat(auditSink.events().get(0).success()).isFalse();
+        assertThat(auditSink.events().get(0).isSuccess()).isFalse();
     }
 }

@@ -46,7 +46,7 @@ class DigitalIdManagementServiceCreateTest {
         OperationResult<DigitalId> result = service.createIdentity(command);
 
         assertThat(result.isSuccess()).isTrue();
-        assertThat(result.payload().status()).isEqualTo(IdentityStatus.ACTIVE);
+        assertThat(result.getPayload().getStatus()).isEqualTo(IdentityStatus.ACTIVE);
         assertThat(repository.exists(DigitalIdNumber.of("DID-000001"))).isTrue();
     }
 
@@ -60,7 +60,7 @@ class DigitalIdManagementServiceCreateTest {
         OperationResult<DigitalId> result = service.createIdentity(command);
 
         assertThat(result.isSuccess()).isFalse();
-        assertThat(result.error().code()).isEqualTo(ErrorCode.DUPLICATE_ID);
+        assertThat(result.getError().code()).isEqualTo(ErrorCode.DUPLICATE_ID);
     }
 
     @Test
@@ -72,7 +72,7 @@ class DigitalIdManagementServiceCreateTest {
         OperationResult<DigitalId> result = service.createIdentity(command);
 
         assertThat(result.isSuccess()).isFalse();
-        assertThat(result.error().code()).isEqualTo(ErrorCode.UNAUTHORISED_OPERATION);
+        assertThat(result.getError().code()).isEqualTo(ErrorCode.UNAUTHORISED_OPERATION);
     }
 
     @Test
@@ -84,7 +84,7 @@ class DigitalIdManagementServiceCreateTest {
         service.createIdentity(command);
 
         assertThat(auditSink.events()).hasSize(1);
-        assertThat(auditSink.events().get(0).success()).isTrue();
+        assertThat(auditSink.events().get(0).isSuccess()).isTrue();
     }
 
     @Test
@@ -96,6 +96,6 @@ class DigitalIdManagementServiceCreateTest {
         service.createIdentity(command);
 
         assertThat(auditSink.events()).hasSize(1);
-        assertThat(auditSink.events().get(0).success()).isFalse();
+        assertThat(auditSink.events().get(0).isSuccess()).isFalse();
     }
 }
