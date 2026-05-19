@@ -41,6 +41,16 @@ public final class DigitalId {
         return new DigitalId(this.id, newName, this.dateOfBirth, this.status, this.createdAt, updatedAt);
     }
 
+    public OperationResult<DigitalId> changeStatus(IdentityStatus target, Instant updatedAt) {
+        if (!this.status.canTransitionTo(target)) {
+            return OperationResult.failure(new DomainError(
+                    ErrorCode.INVALID_STATUS_TRANSITION,
+                    "Cannot transition from " + this.status + " to " + target));
+        }
+        return OperationResult.success(
+                new DigitalId(this.id, this.currentLegalName, this.dateOfBirth, target, this.createdAt, updatedAt));
+    }
+
     public LegalName currentLegalName() {
         return currentLegalName;
     }

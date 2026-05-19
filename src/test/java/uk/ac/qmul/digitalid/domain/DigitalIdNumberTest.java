@@ -27,6 +27,7 @@ class DigitalIdNumberTest {
         assertTrue(ex.getMessage().toLowerCase().contains("prefix"));
     }
 
+
     @Test
     void rejectsWrongLength() {
         Exception ex = assertThrows(IllegalArgumentException.class, () -> DigitalIdNumber.of("DID-00001"));
