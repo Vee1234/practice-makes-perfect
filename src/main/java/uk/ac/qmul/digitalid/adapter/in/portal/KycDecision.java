@@ -1,3 +1,6 @@
 package uk.ac.qmul.digitalid.adapter.in.portal;
-// ...existing code...
 
+public enum KycDecision {
+    PASS,
+    FAIL
+}
