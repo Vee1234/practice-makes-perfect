@@ -3,16 +3,19 @@ package uk.ac.qmul.digitalid.application.service.management;
 import uk.ac.qmul.digitalid.application.audit.AuditEvent;
 import uk.ac.qmul.digitalid.application.audit.AuditEventPublisher;
 import uk.ac.qmul.digitalid.application.auth.AuthorisationService;
+import uk.ac.qmul.digitalid.application.port.in.AddRestrictionPort;
+import uk.ac.qmul.digitalid.application.port.in.ChangeStatusPort;
 import uk.ac.qmul.digitalid.application.port.in.CreateIdentityPort;
 import uk.ac.qmul.digitalid.application.port.in.UpdateIdentityPort;
 import uk.ac.qmul.digitalid.application.port.out.DigitalIdRepository;
 import uk.ac.qmul.digitalid.domain.*;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class DigitalIdManagementService implements CreateIdentityPort, UpdateIdentityPort {
+public final class DigitalIdManagementService implements CreateIdentityPort, UpdateIdentityPort, ChangeStatusPort, AddRestrictionPort {
 
     private final DigitalIdRepository repository;
     private final AuditEventPublisher auditPublisher;
@@ -75,6 +78,58 @@ public final class DigitalIdManagementService implements CreateIdentityPort, Upd
         audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), true, null);
 
         return OperationResult.success(updated);
+    }
+
+    @Override
+    public OperationResult<DigitalId> changeStatus(ChangeStatusCommand command) {
+        Optional<DomainError> auth = authorisationService.authoriseManagement(command.getRequestedBy());
+        if (auth.isPresent()) {
+            audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), false, auth.get().code().name());
+            return OperationResult.failure(auth.get());
+        }
+
+        DigitalId existing = repository.findById(command.getDigitalIdNumber()).orElse(null);
+        if (existing == null) {
+            DomainError error = new DomainError(ErrorCode.NOT_FOUND, "Identity not found");
+            audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), false, error.code().name());
+            return OperationResult.failure(error);
+        }
+
+        OperationResult<DigitalId> transition = existing.changeStatus(command.getTargetStatus(), clock.instant());
+        if (!transition.isSuccess()) {
+            audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), false, transition.getError().code().name());
+            return transition;
+        }
+
+        repository.save(transition.getPayload());
+        audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), true, null);
+        return transition;
+    }
+
+    @Override
+    public OperationResult<DigitalId> addRestriction(AddRestrictionCommand command) {
+        Optional<DomainError> auth = authorisationService.authoriseManagement(command.getRequestedBy());
+        if (auth.isPresent()) {
+            audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), false, auth.get().code().name());
+            return OperationResult.failure(auth.get());
+        }
+
+        DigitalId existing = repository.findById(command.getDigitalIdNumber()).orElse(null);
+        if (existing == null) {
+            DomainError error = new DomainError(ErrorCode.NOT_FOUND, "Identity not found");
+            audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), false, error.code().name());
+            return OperationResult.failure(error);
+        }
+
+        OperationResult<DigitalId> result = existing.addRestriction(command.getRestriction(), LocalDate.now(clock));
+        if (!result.isSuccess()) {
+            audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), false, result.getError().code().name());
+            return result;
+        }
+
+        repository.save(result.getPayload());
+        audit(command.getEventType(), command.getRequestedBy().getOrganisationId(), true, null);
+        return result;
     }
 
     private void audit(String eventType, String actor, boolean success, String reasonCode) {

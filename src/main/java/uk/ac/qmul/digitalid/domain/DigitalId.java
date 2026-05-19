@@ -39,14 +39,6 @@ public final class DigitalId {
         return status;
     }
 
-    public DigitalId changeId(DigitalIdNumber newId) {
-        throw new UnsupportedOperationException("DigitalIdNumber is immutable");
-    }
-
-    public DigitalId changeDateOfBirth(LocalDate newDob) {
-        throw new UnsupportedOperationException("Date of birth is immutable");
-    }
-
     public DigitalId updateLegalName(LegalName newName, Instant updatedAt) {
         return new DigitalId(this.id, newName, this.dateOfBirth, this.status, this.createdAt, updatedAt, this.restrictions);
     }
