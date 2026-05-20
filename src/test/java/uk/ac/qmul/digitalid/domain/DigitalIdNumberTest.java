@@ -34,4 +34,3 @@ class DigitalIdNumberTest {
         assertTrue(ex.getMessage().toLowerCase().contains("length"));
     }
 }
-

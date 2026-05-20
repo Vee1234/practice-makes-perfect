@@ -28,4 +28,3 @@ public enum IdentityStatus {
 
     public abstract boolean canTransitionTo(IdentityStatus target);
 }
-

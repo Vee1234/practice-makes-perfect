@@ -31,4 +31,3 @@ public final class OperationResult<T> {
         return error;
     }
 }
-

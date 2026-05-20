@@ -11,4 +11,3 @@ public enum ErrorCode {
     DUPLICATE_ID,
     NOT_MODIFIABLE
 }
-

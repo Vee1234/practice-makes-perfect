@@ -3,7 +3,6 @@ package uk.ac.qmul.digitalid.domain;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.time.Instant;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;

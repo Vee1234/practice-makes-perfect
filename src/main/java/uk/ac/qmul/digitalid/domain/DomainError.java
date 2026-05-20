@@ -8,4 +8,3 @@ public record DomainError(ErrorCode code, String message) {
         Objects.requireNonNull(message);
     }
 }
-

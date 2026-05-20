@@ -1,6 +1,5 @@
 package uk.ac.qmul.digitalid.domain;
 
-import java.util.Objects;
 
 public record LegalName(String value) {
     public LegalName {
@@ -9,4 +8,3 @@ public record LegalName(String value) {
         }
     }
 }
-

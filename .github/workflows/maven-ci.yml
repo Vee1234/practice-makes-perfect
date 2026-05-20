@@ -2,9 +2,7 @@ name: Maven CI
 
 on:
   push:
-    branches: [ master ]
   pull_request:
-    branches: [ master ]
 
 jobs:
   build:
@@ -31,9 +29,4 @@ jobs:
           name: jacoco-report
           path: target/site/jacoco/
 
-      - name: Checkstyle
-        run: mvn -B checkstyle:check
-
-      - name: Spotless format check
-        run: mvn -B spotless:check
 

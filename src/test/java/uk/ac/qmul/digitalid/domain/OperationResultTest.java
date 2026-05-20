@@ -21,4 +21,3 @@ class OperationResultTest {
         assertEquals(error, result.getError());
     }
 }
-
