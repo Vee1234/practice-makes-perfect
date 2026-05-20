@@ -20,22 +20,22 @@ class EmployerVerificationPolicyTest {
 
     @Test
     void shouldReturnTrue_whenIdentityIsActive() {
-        assertThat(policy.evaluate(identityWithStatus(IdentityStatus.ACTIVE))).isTrue();
+        assertThat(policy.evaluate(identityWithStatus(IdentityStatus.ACTIVE)).passed()).isTrue();
     }
 
     @Test
     void shouldReturnFalse_whenIdentityIsSuspended() {
-        assertThat(policy.evaluate(identityWithStatus(IdentityStatus.SUSPENDED))).isFalse();
+        assertThat(policy.evaluate(identityWithStatus(IdentityStatus.SUSPENDED)).passed()).isFalse();
     }
 
     @Test
     void shouldReturnFalse_whenIdentityIsRevoked() {
-        assertThat(policy.evaluate(identityWithStatus(IdentityStatus.REVOKED))).isFalse();
+        assertThat(policy.evaluate(identityWithStatus(IdentityStatus.REVOKED)).passed()).isFalse();
     }
 
     @Test
     void shouldReturnFalse_whenIdentityIsExpired() {
-        assertThat(policy.evaluate(identityWithStatus(IdentityStatus.EXPIRED))).isFalse();
+        assertThat(policy.evaluate(identityWithStatus(IdentityStatus.EXPIRED)).passed()).isFalse();
     }
 
     private DigitalId identityWithStatus(IdentityStatus target) {

@@ -12,11 +12,11 @@ public final class AuditorPortal {
     private static final Organisation AUDITOR = new Organisation("DTS-AUDIT", OrganisationRole.AUDITOR);
 
     private final AuditQueryService auditQueryService;
-    private final AuditEventSummaryProjector projector;
+    private final AuditEventToSummaryMapper projector;
 
     public AuditorPortal(AuditQueryService auditQueryService) {
         this.auditQueryService = Objects.requireNonNull(auditQueryService, "auditQueryService is required");
-        this.projector         = new AuditEventSummaryProjector();
+        this.projector         = new AuditEventToSummaryMapper();
     }
 
     public List<AuditEventSummary> getEventSummaries() {

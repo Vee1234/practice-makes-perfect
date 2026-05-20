@@ -26,19 +26,19 @@ public final class DigitalIdConsumptionService implements VerifyIdentityPort {
     }
 
     @Override
-    public OperationResult<DigitalId> verify(VerificationRequest request) {
+    public OperationResult<VerificationOutcome> verify(VerificationRequest request) {
         Objects.requireNonNull(request, "request is required");
 
-        Optional<DigitalId> found = repository.findById(request.getDigitalIdNumber());
-        if (found.isEmpty()) {
+        Optional<DigitalId> stored = repository.findById(request.getDigitalIdNumber());
+        if (stored.isEmpty()) {
             audit(request, false, "NOT_FOUND");
             return OperationResult.failure(new DomainError(ErrorCode.NOT_FOUND, "Identity not found"));
         }
 
-        DigitalId identity = found.get();
-        boolean verified = request.getPolicy().evaluate(identity);
-        audit(request, verified, verified ? null : "REJECTED");
-        return OperationResult.success(identity);
+        DigitalId identity = stored.get();
+        EvaluationOutcome outcome = request.getPolicy().evaluate(identity);
+        audit(request, outcome.passed(), outcome.passed() ? null : "REJECTED");
+        return OperationResult.success(new VerificationOutcome(identity, outcome.failingReasonCodes()));
     }
 
     private void audit(VerificationRequest request, boolean success, String reasonCode) {
