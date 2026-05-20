@@ -1,6 +1,5 @@
 package uk.ac.qmul.digitalid.domain;
 
-import java.util.Objects;
 
 public record DigitalIdNumber(String value) {
     public static DigitalIdNumber of(String value) {
@@ -19,4 +18,3 @@ public record DigitalIdNumber(String value) {
         return new DigitalIdNumber(value);
     }
 }
-
