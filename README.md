@@ -6,6 +6,21 @@ This project implements a hexagonal architecture for a console-based digital ide
 
 The project follows hexagonal (ports and adapters) architecture. The domain has no dependencies on any adapter or framework.
 
+## How to run
+
+## Running the system
+
+**Prerequisites:** Java 21, Maven 3.x
+
+  ```bash
+  # Run the interactive console application
+  mvn exec:java
+
+  # Run the test suite
+  mvn test  
+
+  The console prompts you to select an organisation role (Central Authority, Employer, Bank, etc.), then presents a menu of operations available to
+  that role.
 ## FILE STRUCTURE
 
 src/main/java/uk/ac/qmul/digitalid/
