@@ -1,5 +1,6 @@
 package uk.ac.qmul.digitalid.adapter.in.portal;
 
+import uk.ac.qmul.digitalid.application.service.consumption.EvaluationOutcome;
 import uk.ac.qmul.digitalid.application.service.consumption.VerificationPolicy;
 import uk.ac.qmul.digitalid.domain.DigitalId;
 
@@ -18,7 +19,6 @@ public final class CompositeEligibilityPolicy implements EligibilityRule, Verifi
 
     private final LocalDate checkDate;
     private final List<EligibilityRule> rules;
-    private List<String> failingReasonCodes = List.of();
 
     public CompositeEligibilityPolicy(LocalDate checkDate, List<EligibilityRule> rules) {
         this.checkDate = Objects.requireNonNull(checkDate, "checkDate is required");
@@ -28,18 +28,13 @@ public final class CompositeEligibilityPolicy implements EligibilityRule, Verifi
     @Override
     public Optional<String> evaluate(EligibilityContext context) {
         List<String> failures = collectFailures(context);
-        this.failingReasonCodes = List.copyOf(failures);
         return failures.isEmpty() ? Optional.empty() : Optional.of(String.join(",", failures));
     }
 
     @Override
-    public boolean evaluate(DigitalId identity) {
-        evaluate(new EligibilityContext(identity, checkDate));
-        return failingReasonCodes.isEmpty();
-    }
-
-    public List<String> getFailingReasonCodes() {
-        return failingReasonCodes;
+    public EvaluationOutcome evaluate(DigitalId identity) {
+        List<String> failures = collectFailures(new EligibilityContext(identity, checkDate));
+        return new EvaluationOutcome(failures.isEmpty(), List.copyOf(failures));
     }
 
     private List<String> collectFailures(EligibilityContext context) {

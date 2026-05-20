@@ -8,16 +8,15 @@ import java.util.Optional;
 public final class AuthorisationService {
 
     public Optional<DomainError> authoriseManagement(Organisation organisation) {
-        if (organisation.getRole() == OrganisationRole.CENTRAL_AUTHORITY) {
-            return Optional.empty();
-        }
-        return Optional.of(new DomainError(ErrorCode.UNAUTHORISED_OPERATION, "Unauthorised operation"));
+        return authorise(organisation, OrganisationRole.CENTRAL_AUTHORITY);
     }
 
     public Optional<DomainError> authoriseAuditQuery(Organisation organisation) {
-        if (organisation.getRole() == OrganisationRole.AUDITOR) {
-            return Optional.empty();
-        }
+        return authorise(organisation, OrganisationRole.AUDITOR);
+    }
+
+    private Optional<DomainError> authorise(Organisation organisation, OrganisationRole requiredRole) {
+        if (organisation.getRole() == requiredRole) return Optional.empty();
         return Optional.of(new DomainError(ErrorCode.UNAUTHORISED_OPERATION, "Unauthorised operation"));
     }
 }

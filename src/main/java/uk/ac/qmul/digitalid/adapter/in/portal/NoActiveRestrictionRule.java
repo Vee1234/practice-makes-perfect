@@ -18,6 +18,6 @@ public final class NoActiveRestrictionRule implements EligibilityRule {
         boolean blocked = context.getIdentity().getRestrictions().stream()
                 .anyMatch(r -> r.getType() == restrictionType
                         && r.isActiveOn(context.getCheckDate()));
-        return blocked ? Optional.of(restrictionType.name() + "_ACTIVE") : Optional.empty();
+        return blocked ? Optional.of(restrictionType.activeReasonCode()) : Optional.empty();
     }
 }

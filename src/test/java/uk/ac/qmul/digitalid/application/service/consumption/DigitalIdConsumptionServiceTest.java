@@ -13,6 +13,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,6 +31,7 @@ class DigitalIdConsumptionServiceTest {
     void setUp() {
         repository = new InMemoryDigitalIdRepository();
         auditSink = new InMemoryAuditSink();
+
         AuditEventPublisher auditPublisher = new AuditEventPublisher();
         auditPublisher.attach(auditSink);
         Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
@@ -38,9 +40,10 @@ class DigitalIdConsumptionServiceTest {
 
     @Test
     void shouldReturnFailure_whenIdentityDoesNotExist() {
-        VerificationRequest request = new VerificationRequest(ID, EMPLOYER, identity -> true);
+        VerificationRequest request = new VerificationRequest(ID, EMPLOYER,
+                identity -> new EvaluationOutcome(true, List.of()));
 
-        OperationResult<DigitalId> result = service.verify(request);
+        OperationResult<VerificationOutcome> result = service.verify(request);
 
         assertThat(result.isSuccess()).isFalse();
         assertThat(result.getError().code()).isEqualTo(ErrorCode.NOT_FOUND);
@@ -50,17 +53,19 @@ class DigitalIdConsumptionServiceTest {
     void shouldReturnIdentity_whenIdentityExists() {
         DigitalId saved = DigitalId.create(ID, new LegalName("Jane Doe"), LocalDate.of(1990, 1, 1), NOW);
         repository.save(saved);
-        VerificationRequest request = new VerificationRequest(ID, EMPLOYER, identity -> true);
+        VerificationRequest request = new VerificationRequest(ID, EMPLOYER,
+                identity -> new EvaluationOutcome(true, List.of()));
 
-        OperationResult<DigitalId> result = service.verify(request);
+        OperationResult<VerificationOutcome> result = service.verify(request);
 
         assertThat(result.isSuccess()).isTrue();
-        assertThat(result.getPayload().getId()).isEqualTo(ID);
+        assertThat(result.getPayload().identity().getId()).isEqualTo(ID);
     }
 
     @Test
     void shouldAudit_onEveryVerification() {
-        VerificationRequest request = new VerificationRequest(ID, EMPLOYER, identity -> true);
+        VerificationRequest request = new VerificationRequest(ID, EMPLOYER,
+                identity -> new EvaluationOutcome(true, List.of()));
 
         service.verify(request);
 
