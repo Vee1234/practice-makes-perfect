@@ -10,11 +10,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Composite + Strategy: evaluates an ordered list of EligibilityRules, collects all failing
- * reason codes, and adapts the combined outcome to the VerificationPolicy interface so it
- * plugs into the shared consumption service without modification.
- */
 public final class CompositeEligibilityPolicy implements EligibilityRule, VerificationPolicy {
 
     private final LocalDate checkDate;
